@@ -17,6 +17,7 @@ public class BlockManager : Singleton
 
     void Update()
     {
+        /*
         if (actionBlock.IsMoving)
         {
             return;
@@ -43,7 +44,73 @@ public class BlockManager : Singleton
         {
             OnTouchEnd(primaryTouch.position.ReadValue());
         }
+          */
+
+        // DebugCode for window
+        if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            Slide(0, 1);
+        }
+        else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            Slide(1, 0);
+        }
+        else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            Slide(-1, 0);
+        }
+        else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            Slide(0, -1);
+        }
     }
+
+
+    // 버튼을 눌렀을때 -> 이동하기전에 방향대로 배열 싹 스캔해서 맞닿을 블록의 체력 체크
+    //                -> 죽을 체력이라면 걔 위치까지, 아니면 그 앞에 까지
+
+    void Slide(int _x, int _y)
+    {
+        if (actionBlock.IsMoving) return;
+
+        Position dir = new(_x, _y);
+
+        Position targetPos = actionBlock.GetPos();
+        int moveRange = 0;
+        target = null;
+        while (true)
+        {
+            int x = targetPos.x + dir.x;
+            int y = targetPos.y + dir.y;
+
+            if (x < 0 || x >= row || y < 0 || y >= column)
+            {
+                break;
+            }
+
+            if (Blocks[x, y] != null)
+            {
+                if (moveRange > 0)
+                    target = Blocks[x, y];
+                break;
+            }
+
+            targetPos.Set(x, y);
+            moveRange++;
+        }
+
+        if (moveRange < 1)
+        {
+            Debug.Log("이동 실패");
+            actionBlock.Wiggle();
+        }
+        else
+        {
+            Debug.Log("이동");
+            actionBlock.Slide(new Vector3(targetPos.x, targetPos.y, 0), target);
+        }
+    }
+
     public ActionBlock actionBlock;
     Block target;
     private Vector2 touchStartPosition;
@@ -58,6 +125,7 @@ public class BlockManager : Singleton
         touchStartPosition = value;
         Debug.Log($"Touch Start Position: {touchStartPosition}");
     }
+
     [SerializeField] private float minSwipeDistance = 50f; // 최소 스와이프 거리 (픽셀 단위)
 
     private void OnTouchEnd(Vector2 value)
@@ -125,7 +193,8 @@ public class BlockManager : Singleton
     public void LoadScene(string sceneName)
     {
         SceneManager.LoadScene(sceneName);
-    }    public void LoadScene(int sceneNumber)
+    }
+    public void LoadScene(int sceneNumber)
     {
         SceneManager.LoadScene(sceneNumber);
     }

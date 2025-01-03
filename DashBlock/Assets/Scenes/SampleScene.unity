@@ -7203,6 +7203,57 @@ MonoBehaviour:
   prtc: {fileID: 570666683}
   wiggle: {fileID: 8300000, guid: ed557794f959cf74e9a13c4adcbe1b55, type: 3}
   dash: {fileID: 8300000, guid: 9473f16784dee244aa9fdc6c81f3c90e, type: 3}
+  curve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 7.844058
+      outSlope: 7.844058
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.03643614
+      value: 0.2858072
+      inSlope: 5.2261486
+      outSlope: 5.2261486
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.22433513
+      value: 0.7758928
+      inSlope: 1.7241479
+      outSlope: 1.7241479
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.49111158
+      value: 1
+      inSlope: 0.038899764
+      outSlope: 0.038899764
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: -0.005017654
+      outSlope: -0.005017654
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.9830674
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!82 &648857263
 AudioSource:
   m_ObjectHideFlags: 0
@@ -11823,6 +11874,7 @@ MonoBehaviour:
   row: 7
   column: 13
   actionBlock: {fileID: 648857262}
+  minSwipeDistance: 50
 --- !u!4 &1611903311
 Transform:
   m_ObjectHideFlags: 0
