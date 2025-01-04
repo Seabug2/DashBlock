@@ -163,6 +163,7 @@ PlayerSettings:
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
     Android: com.DefaultCompany.DashBlock
+    Standalone: com.DefaultCompany.DashBlock
   buildNumber:
     Standalone: 0
     VisionOS: 0
@@ -863,7 +864,7 @@ PlayerSettings:
   hmiLogStartupTiming: 0
   hmiCpuConfiguration: 
   apiCompatibilityLevel: 6
-  activeInputHandler: 1
+  activeInputHandler: 2
   windowsGamepadBackendHint: 0
   cloudProjectId: d7e43762-1726-4d01-b8e5-dc4ab7e8e524
   framebufferDepthMemorylessMode: 0

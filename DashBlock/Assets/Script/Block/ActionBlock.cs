@@ -41,12 +41,14 @@ public class ActionBlock : Block
     }
     public AudioClip wiggle;
     public AudioClip dash;
+
+    public AnimationCurve curve;
     public void Slide(Vector2 targetPosition, Block target = null)
     {
         IsMoving = true;
         transform
-            .DOMove(targetPosition, .23f)
-            .SetEase(Ease.InQuart)
+            .DOMove(target == null ? targetPosition: target.transform.position, .23f)
+            .SetEase(curve)
             .OnComplete(() =>
             {
                 IsMoving = false;

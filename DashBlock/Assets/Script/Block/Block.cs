@@ -37,6 +37,9 @@ public class Block : MonoBehaviour
     [SerializeField] public int hp;
     [SerializeField] protected TextMeshPro tmp;
 
+    // KJM
+    [SerializeField] private GameObject _shockWaveObject;
+
     protected virtual void Start()
     {
         Position pos = GetPos();
@@ -54,6 +57,7 @@ public class Block : MonoBehaviour
 
         if (hp <= 0)
         {
+            _shockWaveObject.SetActive(true);
             Destroy(gameObject);
             return true;
         }
