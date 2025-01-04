@@ -4,28 +4,51 @@ using UnityEngine;
 using TMPro;
 using DG.Tweening;
 
-public class Position
+public struct BlockPosition
 {
-    public int x = 0;
-    public int y = 0;
-
-    public Position()
-    {
-        x = 0;
-        y = 0;
-    }
-
-    public Position(int x, int y)
+    public sbyte x, y;
+    public BlockPosition(sbyte x, sbyte y)
     {
         this.x = x;
         this.y = y;
     }
 
-    public Position Set(int x, int y)
+    public static BlockPosition operator +(BlockPosition a , BlockPosition b)
     {
-        this.x = x;
-        this.y = y;
-        return this;
+        return new BlockPosition((sbyte)(a.x + b.x), (sbyte)(a.y + b.y));
+    }
+    
+    public static BlockPosition operator -(BlockPosition a , BlockPosition b)
+    {
+        return new BlockPosition((sbyte)(a.x - b.x), (sbyte)(a.y - b.y));
+    }
+
+    // Equals 재정의 (값 비교)
+    public override bool Equals(object obj)
+    {
+        if (obj is BlockPosition other)
+        {
+            return this.x == other.x && this.y == other.y;
+        }
+        return false;
+    }
+
+    // GetHashCode 재정의 (해시 코드 생성)
+    public override int GetHashCode()
+    {
+        return (x, y).GetHashCode();
+    }
+
+    // ToString 재정의 (디버깅 편의)
+    public override string ToString()
+    {
+        return $"({x}, {y})";
+    }
+    
+    // BlockPosition -> Vector2 (암묵적 변환)
+    public static implicit operator Vector2(BlockPosition pos)
+    {
+        return new Vector2(pos.x, pos.y);
     }
 }
 
@@ -34,47 +57,67 @@ public class Block : MonoBehaviour
     BlockManager manager;
     protected BlockManager Manager => manager ??= Locator.GetUI<BlockManager>();
 
-    [SerializeField] public int hp;
+    sbyte hp;
+    [SerializeField]
+    public sbyte HP
+    {
+        get
+        {
+            return hp;
+        }
+        set
+        {
+            hp = value;
+
+            if (hp <= 0)
+            {
+                ShockWaveObject.gameObject.SetActive(true);
+                Destroy(gameObject);
+            }
+            else
+            {
+                tmp.text = hp.ToString();
+            }
+        }
+    }
+
     [SerializeField] protected TextMeshPro tmp;
 
     // KJM
-    [SerializeField] private GameObject _shockWaveObject;
+    ShockWave shockWaveObject;
+    ShockWave ShockWaveObject => shockWaveObject ??= Manager.ShockWave;
 
     protected virtual void Start()
     {
-        Position pos = GetPos();
-        transform.position = new Vector3(pos.x, pos.y, 0);
-        Manager.Blocks[pos.x, pos.y] = this;
+        Manager.Blocks[GetPos()] = this;
 
-        hp = Random.Range(1, 4);
-        tmp.text = hp.ToString();
+        HP = (sbyte)Random.Range(1, 4);
     }
 
-    public bool TakeDamage(int i)
+    public bool TakeDamage(sbyte i)
     {
-        hp -= i;
-        tmp.text = hp.ToString();
+        HP -= i;
 
-        if (hp <= 0)
+        if (HP <= 0)
         {
-            _shockWaveObject.SetActive(true);
-            Destroy(gameObject);
             return true;
         }
         else
         {
-            return false;
+            return false; 
         }
     }
+
     public void Punching()
     {
-        transform.DOPunchScale(Vector3.one * 0.5f, .3f, 20).OnComplete(()=>transform.localScale = Vector3.one);
+        transform.DOKill();
+        transform.DOPunchScale(Vector3.one, .3f, 20).OnComplete(() => transform.localScale = Vector3.one);
     }
 
-    public Position GetPos()
+    public BlockPosition GetPos()
     {
-        int x = Mathf.RoundToInt(transform.position.x);
-        int y = Mathf.RoundToInt(transform.position.y);
-        return new Position(x, y);
+        sbyte x = (sbyte)Mathf.RoundToInt(transform.position.x);
+        sbyte y = (sbyte)Mathf.RoundToInt(transform.position.y);
+        return new BlockPosition(x, y);
     }
 }

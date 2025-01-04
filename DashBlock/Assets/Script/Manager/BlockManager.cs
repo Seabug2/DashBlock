@@ -1,28 +1,68 @@
 using UnityEngine;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
 
 public class BlockManager : Singleton
 {
-    [SerializeField] int row;
-    [SerializeField] int column;
+    [Range(4, 100)]
+    [SerializeField] sbyte limit_x;
+    [Range(4, 100)]
+    [SerializeField] sbyte limit_y;
+    [SerializeField] ShockWave shockWave;
+    public ShockWave ShockWave => shockWave;
+    public readonly Dictionary<BlockPosition, Block> Blocks = new();
 
-    public Block[,] Blocks { get; set; }
+    /// <summary>
+    /// 각각의 블록이 위치 값을 key로 스스로를 딕셔너리에 추가, 만약 중복된 위치의 블록이 있다면 나중에 등록하려는 쪽을 삭제
+    /// </summary>
+    /// <param name="key">튜플</param>
+    /// <param name="block">블록 객체</param>
+    public void Register(BlockPosition key, Block block)
+    {
+        if (Blocks.ContainsKey(key))
+        {
+            Debug.Log("등록 실패");
+            Destroy(block.gameObject);
+        }
+        else
+        {
+            Debug.Log("등록 성공");
+            Blocks.Add(key, block);
+        }
+    }
 
     protected override void Awake()
     {
         base.Awake();
-        Blocks = new Block[row, column];
     }
 
     void Update()
     {
-        /*
-        if (actionBlock.IsMoving)
+        if (ActionBlock.IsMoving) return;
+
+        // PC 환경 (키보드 사용)
+        if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
         {
-            return;
+            CheckLine(new BlockPosition(0, 1));
+        }
+        else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            CheckLine(new BlockPosition(1, 0));
+        }
+        else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            CheckLine(new BlockPosition(-1, 0));
+        }
+        else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            CheckLine(new BlockPosition(0, -1));
         }
 
+#if UNITY_IOS || UNITY_ANDROID
+        // 모바일 환경 (터치스크린 사용)
         // 현재 활성화된 터치 스크린이 있는지 확인
         if (Touchscreen.current == null)
             return;
@@ -44,75 +84,70 @@ public class BlockManager : Singleton
         {
             OnTouchEnd(primaryTouch.position.ReadValue());
         }
-          */
-
-        // DebugCode for window
-        if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
-        {
-            Slide(0, 1);
-        }
-        else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            Slide(1, 0);
-        }
-        else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            Slide(-1, 0);
-        }
-        else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
-        {
-            Slide(0, -1);
-        }
+#endif
     }
 
-
-    // 버튼을 눌렀을때 -> 이동하기전에 방향대로 배열 싹 스캔해서 맞닿을 블록의 체력 체크
-    //                -> 죽을 체력이라면 걔 위치까지, 아니면 그 앞에 까지
-
-    void Slide(int _x, int _y)
+    void CheckLine(BlockPosition dir)
     {
-        if (actionBlock.IsMoving) return;
-
-        Position dir = new(_x, _y);
-
-        Position targetPos = actionBlock.GetPos();
-        int moveRange = 0;
-        target = null;
+        BlockPosition targetPos = ActionBlock.GetPos();
+        int moveDistance = 0;
+        bool broken = false;
         while (true)
         {
-            int x = targetPos.x + dir.x;
-            int y = targetPos.y + dir.y;
+            BlockPosition nextPosition = targetPos + dir;
 
-            if (x < 0 || x >= row || y < 0 || y >= column)
+            if (nextPosition.x < 0 || nextPosition.x >= limit_x || nextPosition.y < 0 || nextPosition.y >= limit_y)
             {
                 break;
             }
 
-            if (Blocks[x, y] != null)
+            if (Blocks.ContainsKey(nextPosition)) //이동하려는 위치에 블록이 존재할 때
             {
-                if (moveRange > 0)
-                    target = Blocks[x, y];
-                break;
+                if (moveDistance < 1) break;
+
+                Block target = Blocks[nextPosition];
+                if (target.HP > 1) //그 블록의 체력이 1보다 높으면
+                {
+                    target.HP -= 1;
+                    target.Punching();
+                    break;
+                }
+                else
+                {
+                    broken = true;
+                    Blocks.Remove(nextPosition);
+                    Destroy(target.gameObject);
+                }
             }
 
-            targetPos.Set(x, y);
-            moveRange++;
+            targetPos = nextPosition;
+            moveDistance++;
         }
 
-        if (moveRange < 1)
+        if (moveDistance < 1)
         {
-            Debug.Log("이동 실패");
-            actionBlock.Wiggle();
+            ActionBlock.Wiggle();
         }
         else
         {
-            Debug.Log("이동");
-            actionBlock.Slide(new Vector3(targetPos.x, targetPos.y, 0), target);
+            ActionBlock.Dash(targetPos, broken);
         }
     }
 
-    public ActionBlock actionBlock;
-    Block target;
+    public ActionBlock ActionBlock { get; private set; }
+
+    public void Register(ActionBlock ActionBlock)
+    {
+        if (this.ActionBlock == null)
+        {
+            this.ActionBlock = ActionBlock;
+        }
+        else
+        {
+            Destroy(ActionBlock.gameObject);
+        }
+    }
+
     private Vector2 touchStartPosition;
     private Vector2 touchEndPosition;
     bool pressed = false;
@@ -144,49 +179,16 @@ public class BlockManager : Singleton
             Debug.Log("스와이프 거리 부족");
             return;
         }
-        Position dir = new();
+
         if (Mathf.Abs(swipeVector.x) > Mathf.Abs(swipeVector.y))
         {
-            dir.Set(swipeVector.x > 0 ? 1 : -1, 0); // 수평 이동
+            sbyte x = swipeVector.x > 0 ? (sbyte)1 : (sbyte)-1;
+            CheckLine(new BlockPosition(x, 0)); // 수평 이동
         }
         else
         {
-            dir.Set(0, swipeVector.y > 0 ? 1 : -1); // 수직 이동
-        }
-
-        Position targetPos = actionBlock.GetPos();
-        int moveRange = 0;
-        target = null;
-        while (true)
-        {
-            int x = targetPos.x + dir.x;
-            int y = targetPos.y + dir.y;
-
-            if (x < 0 || x >= row || y < 0 || y >= column)
-            {
-                break;
-            }
-
-            if (Blocks[x, y] != null)
-            {
-                if (moveRange > 0)
-                    target = Blocks[x, y];
-                break;
-            }
-
-            targetPos.Set(x, y);
-            moveRange++;
-        }
-
-        if (moveRange < 1)
-        {
-            Debug.Log("이동 실패");
-            actionBlock.Wiggle();
-        }
-        else
-        {
-            Debug.Log("이동");
-            actionBlock.Slide(new Vector3(targetPos.x, targetPos.y, 0), target);
+            sbyte y = swipeVector.y > 0 ? (sbyte)1 : (sbyte)-1;
+            CheckLine(new BlockPosition(0, y)); // 수평 이동
         }
     }
 
