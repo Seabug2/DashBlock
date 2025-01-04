@@ -1,8 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using TMPro;
 using DG.Tweening;
+using TMPro;
+using UnityEngine;
 
 public struct BlockPosition
 {
@@ -54,28 +52,9 @@ public struct BlockPosition
 
 public class Block : MonoBehaviour
 {
-    sbyte hp;
-    [SerializeField]
-    public sbyte HP
-    {
-        get
-        {
-            return hp;
-        }
-        set
-        {
-            hp = value;
-
-            if (hp <= 0)
-            {
-                Destroy(gameObject);
-            }
-            else
-            {
-                tmp.text = hp.ToString();
-            }
-        }
-    }
+    [SerializeField, Header("초기 체력"), Space(10)]
+    protected sbyte initialLife = -1;
+    public sbyte HP { get; protected set; }
 
     [SerializeField] protected TextMeshPro tmp;
 
@@ -85,25 +64,37 @@ public class Block : MonoBehaviour
 
     protected virtual void Awake()
     {
-        BlockManager.Add(GetPos(), this);
+        if (!BlockManager.Blocks.TryAdd(Position, this))
+        {
+            Destroy(gameObject);
+            return;
+        }
     }
 
     //TODO : 벽돌 배치에 관한 문제
     protected virtual void Start()
     {
-        HP = (sbyte)Random.Range(1, 4);
+        Init();
     }
 
-    public bool TakeDamage(sbyte i = 1)
+    void Init()
+    {
+        HP = initialLife <= 0 ? (sbyte)Random.Range(1, 4) : initialLife;
+        tmp.text = HP.ToString();
+    }
+
+    public virtual bool TakeDamage(sbyte i = 1)
     {
         HP -= i;
-
         if (HP <= 0)
         {
+            BlockManager.Remove(Position);
+            gameObject.SetActive(false);
             return true;
         }
         else
         {
+            tmp.text = HP.ToString();
             return false;
         }
     }
@@ -114,15 +105,13 @@ public class Block : MonoBehaviour
         transform.DOPunchScale(Vector3.one, .3f, 20).OnComplete(() => transform.localScale = Vector3.one);
     }
 
-    public BlockPosition GetPos()
+    public BlockPosition Position
     {
-        sbyte x = (sbyte)Mathf.RoundToInt(transform.position.x);
-        sbyte y = (sbyte)Mathf.RoundToInt(transform.position.y);
-        return new BlockPosition(x, y);
-    }
-
-    protected virtual void OnDestroy()
-    {
-        BlockManager.Remove(GetPos());
+        get
+        {
+            sbyte x = (sbyte)Mathf.RoundToInt(transform.position.x);
+            sbyte y = (sbyte)Mathf.RoundToInt(transform.position.y);
+            return new BlockPosition(x, y);
+        }
     }
 }

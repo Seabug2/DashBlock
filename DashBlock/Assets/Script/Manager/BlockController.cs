@@ -4,20 +4,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
+using UnityEditor;
 
 public class BlockController : Singleton
 {
-    BlockPosition limit;
-
-    private void Start()
-    {
-        limit = BlockManager.GetLimit();
-        Debug.Log(limit);
-    }
+    public sbyte limit_x;
+    public sbyte limit_y;
 
     void Update()
     {
-        // PC 환경 (키보드 사용)
         if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
         {
             CheckLine(new BlockPosition(0, 1));
@@ -36,24 +31,19 @@ public class BlockController : Singleton
         }
 
 #if UNITY_IOS || UNITY_ANDROID
-        // 모바일 환경 (터치스크린 사용)
-        // 현재 활성화된 터치 스크린이 있는지 확인
         if (Touchscreen.current == null)
             return;
 
-        // 첫 번째 터치를 가져옵니다 (멀티 터치를 처리하려면 추가 로직 필요)
         var primaryTouch = Touchscreen.current.primaryTouch;
 
         if (primaryTouch == null)
             return;
 
-        // 터치가 시작되었을 때
         if (primaryTouch.press.wasPressedThisFrame)
         {
             OnTouchStart(primaryTouch.position.ReadValue());
         }
 
-        // 터치가 끝났을 때
         if (primaryTouch.press.wasReleasedThisFrame)
         {
             OnTouchEnd(primaryTouch.position.ReadValue());
@@ -65,20 +55,20 @@ public class BlockController : Singleton
     {
         if (ActionBlock.IsMoving) return;
 
-        BlockPosition targetPos = ActionBlock.GetPos();
+        BlockPosition targetPos = ActionBlock.Position;
         int moveDistance = 0;
         Block target = null;
-
+        BlockPosition nextPosition;
         while (true)
         {
-            BlockPosition nextPosition = targetPos + dir;
+            nextPosition = targetPos + dir;
 
-            if (nextPosition.x < 0 || nextPosition.x > limit.x || nextPosition.y < 0 || nextPosition.y > limit.y)
+            if (nextPosition.x < 0 || nextPosition.x > limit_x || nextPosition.y < 0 || nextPosition.y > limit_y)
             {
                 break;
             }
 
-            if (BlockManager.TryGet(nextPosition, out target))
+            if (BlockManager.Blocks.TryGetValue(nextPosition, out target))
             {
                 break;
             }
@@ -93,7 +83,14 @@ public class BlockController : Singleton
         }
         else
         {
-            ActionBlock.Dash(targetPos, target);
+            if (target == null)
+            {
+                ActionBlock.Dash(targetPos);
+            }
+            else
+            {
+                ActionBlock.Dash(targetPos, target);
+            }
         }
     }
 
@@ -108,21 +105,16 @@ public class BlockController : Singleton
     {
         pressed = true;
 
-        // 터치 시작 위치 저장
         touchStartPosition = value;
     }
 
-    [SerializeField] private float minSwipeDistance = 50f; // 최소 스와이프 거리 (픽셀 단위)
-
+    [SerializeField] private float minSwipeDistance = 50f;
     private void OnTouchEnd(Vector2 value)
     {
         if (!pressed) return;
         pressed = false;
 
-        // 터치 종료 위치 저장
-        touchEndPosition = value; // 마지막 위치를 종료 위치로 사용
-
-        // 두 위치 차이 계산
+        touchEndPosition = value;
         Vector2 swipeVector = touchEndPosition - touchStartPosition;
 
         if (swipeVector.magnitude < minSwipeDistance) return;
@@ -130,12 +122,12 @@ public class BlockController : Singleton
         if (Mathf.Abs(swipeVector.x) > Mathf.Abs(swipeVector.y))
         {
             sbyte x = swipeVector.x > 0 ? (sbyte)1 : (sbyte)-1;
-            CheckLine(new BlockPosition(x, 0)); // 수평 이동
+            CheckLine(new BlockPosition(x, 0));
         }
         else
         {
             sbyte y = swipeVector.y > 0 ? (sbyte)1 : (sbyte)-1;
-            CheckLine(new BlockPosition(0, y)); // 수평 이동
+            CheckLine(new BlockPosition(0, y));
         }
     }
 }

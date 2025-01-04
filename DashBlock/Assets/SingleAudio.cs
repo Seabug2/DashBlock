@@ -7,7 +7,8 @@ public class SingleAudio : Singleton
     protected override void Awake()
     {
         base.Awake();
-        audioSource = GetComponent<AudioSource>();
+        audioSource = gameObject.AddComponent<AudioSource>();
+        Debug.Log("초기화 완료");
     }
 
     public void PlayOneShot(AudioClip audioClip)

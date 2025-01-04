@@ -7,9 +7,6 @@ public class ShockWave : Singleton
     [SerializeField]
     private float _shockwaveTime = 0.75f;
 
-    [SerializeField]
-    private Transform _actionBlockTransform;
-
     private Coroutine _coroutine;
 
     [SerializeField]
@@ -24,14 +21,12 @@ public class ShockWave : Singleton
         gameObject.SetActive(false);
     }
 
-    public void CallShockWave(Vector2 position)
+    public void CallShockWave(Vector3 position)
     {
         transform.position = position;
         gameObject.SetActive(true);
         _coroutine = StartCoroutine(ShockWaveAction(-0.3f, 1.0f));
     }
-
-    public float speed = 1;
 
     private IEnumerator ShockWaveAction(float startPos, float endPos)
     {
@@ -43,7 +38,7 @@ public class ShockWave : Singleton
 
         while (elapsedTime < _shockwaveTime)
         {
-            elapsedTime += Time.deltaTime * speed;
+            elapsedTime += Time.deltaTime;
 
             lerpedAmount = Mathf.Lerp(startPos, endPos, (elapsedTime / _shockwaveTime));
             _material.SetFloat(_waveDistanceFromCenter, lerpedAmount);

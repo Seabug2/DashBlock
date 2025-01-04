@@ -62,7 +62,7 @@ public static class Locator
         }
     }
 
-    public static bool TryGetUI<T>(out T component) where T : Singleton
+    public static bool TryGet<T>(out T component) where T : Singleton
     {
         Type type = typeof(T);
         if (dict_UIComponent.TryGetValue(type, out Singleton uiComponent) && uiComponent is T castComponent)
