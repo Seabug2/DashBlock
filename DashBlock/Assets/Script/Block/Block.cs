@@ -13,12 +13,12 @@ public struct BlockPosition
         this.y = y;
     }
 
-    public static BlockPosition operator +(BlockPosition a , BlockPosition b)
+    public static BlockPosition operator +(BlockPosition a, BlockPosition b)
     {
         return new BlockPosition((sbyte)(a.x + b.x), (sbyte)(a.y + b.y));
     }
-    
-    public static BlockPosition operator -(BlockPosition a , BlockPosition b)
+
+    public static BlockPosition operator -(BlockPosition a, BlockPosition b)
     {
         return new BlockPosition((sbyte)(a.x - b.x), (sbyte)(a.y - b.y));
     }
@@ -44,7 +44,7 @@ public struct BlockPosition
     {
         return $"({x}, {y})";
     }
-    
+
     // BlockPosition -> Vector2 (암묵적 변환)
     public static implicit operator Vector2(BlockPosition pos)
     {
@@ -54,9 +54,6 @@ public struct BlockPosition
 
 public class Block : MonoBehaviour
 {
-    BlockManager manager;
-    protected BlockManager Manager => manager ??= Locator.GetUI<BlockManager>();
-
     sbyte hp;
     [SerializeField]
     public sbyte HP
@@ -71,7 +68,6 @@ public class Block : MonoBehaviour
 
             if (hp <= 0)
             {
-                ShockWaveObject.gameObject.SetActive(true);
                 Destroy(gameObject);
             }
             else
@@ -85,16 +81,20 @@ public class Block : MonoBehaviour
 
     // KJM
     ShockWave shockWaveObject;
-    ShockWave ShockWaveObject => shockWaveObject ??= Manager.ShockWave;
+    protected ShockWave ShockWaveObject => shockWaveObject ??= Locator.GetUI<ShockWave>();
 
+    protected virtual void Awake()
+    {
+        BlockManager.Add(GetPos(), this);
+    }
+
+    //TODO : 벽돌 배치에 관한 문제
     protected virtual void Start()
     {
-        Manager.Blocks[GetPos()] = this;
-
         HP = (sbyte)Random.Range(1, 4);
     }
 
-    public bool TakeDamage(sbyte i)
+    public bool TakeDamage(sbyte i = 1)
     {
         HP -= i;
 
@@ -104,7 +104,7 @@ public class Block : MonoBehaviour
         }
         else
         {
-            return false; 
+            return false;
         }
     }
 
@@ -119,5 +119,10 @@ public class Block : MonoBehaviour
         sbyte x = (sbyte)Mathf.RoundToInt(transform.position.x);
         sbyte y = (sbyte)Mathf.RoundToInt(transform.position.y);
         return new BlockPosition(x, y);
+    }
+
+    protected virtual void OnDestroy()
+    {
+        BlockManager.Remove(GetPos());
     }
 }

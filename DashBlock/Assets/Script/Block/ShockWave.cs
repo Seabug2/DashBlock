@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ShockWave : MonoBehaviour
+public class ShockWave : Singleton
 {
     [SerializeField]
     private float _shockwaveTime = 0.75f;
@@ -18,41 +18,39 @@ public class ShockWave : MonoBehaviour
     private static int _waveDistanceFromCenter = Shader.PropertyToID("_WaveDistanceFromCenter");
 
 
-    //private void Awake()
-    //{
-    //    _material = GetComponent<Material>();
-    //}
-
-    private void OnEnable()
+    protected override void Awake()
     {
-        CallShockWave();
+        base.Awake();
+        gameObject.SetActive(false);
     }
 
-    private void CallShockWave()
+    public void CallShockWave(Vector2 position)
     {
-        transform.position = _actionBlockTransform.position; 
+        transform.position = position;
+        gameObject.SetActive(true);
         _coroutine = StartCoroutine(ShockWaveAction(-0.3f, 1.0f));
-
     }
+
+    public float speed = 1;
 
     private IEnumerator ShockWaveAction(float startPos, float endPos)
     {
         _material.SetFloat(_waveDistanceFromCenter, startPos);
-        
+
         float lerpedAmount = 0f;
-        
+
         float elapsedTime = 0f;
-        
+
         while (elapsedTime < _shockwaveTime)
         {
-            elapsedTime += Time.deltaTime;
+            elapsedTime += Time.deltaTime * speed;
 
             lerpedAmount = Mathf.Lerp(startPos, endPos, (elapsedTime / _shockwaveTime));
             _material.SetFloat(_waveDistanceFromCenter, lerpedAmount);
             yield return null;
         }
-        gameObject.SetActive(false);
 
+        gameObject.SetActive(false);
     }
 
 }

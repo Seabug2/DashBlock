@@ -22,6 +22,7 @@ public static class Locator
         else
         {
             Debug.Log("이미 추가되어있음");
+            UnityEngine.Object.Destroy(_UIComponent.gameObject);
         }
     }
 
