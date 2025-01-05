@@ -52,51 +52,65 @@ public struct BlockPosition
 
 public class Block : MonoBehaviour
 {
-    [SerializeField, Header("초기 체력"), Space(10)]
-    protected sbyte initialLife = -1;
-    public sbyte HP { get; protected set; }
+    TextMeshPro tmp;
+    protected TextMeshPro TMP => tmp ??= GetComponentInChildren<TextMeshPro>();
 
-    [SerializeField] protected TextMeshPro tmp;
-
-    // KJM
     ShockWave shockWaveObject;
-    protected ShockWave ShockWaveObject => shockWaveObject ??= Locator.GetUI<ShockWave>();
+    protected ShockWave ShockWaveObject => shockWaveObject ??= Locator.Get<ShockWave>();
 
-    protected virtual void Awake()
+    [SerializeField, Header("초기 체력"), Range(-1, 99), Space(10)]
+    protected sbyte initialLife = -1;
+
+    sbyte hp;
+    public sbyte HP
+    {
+        get
+        {
+            return hp;
+        }
+        set
+        {
+            hp = value;
+
+            TMP.text = hp.ToString();
+
+            if (hp <= 0)
+            {
+                OnBlockDestroyed();
+                Destroy(gameObject);
+            }
+        }
+    }
+
+    public bool TakeDamage()
+    {
+        return --HP <= 0;
+    }
+
+    protected virtual void OnBlockDestroyed()
+    {
+        BlockManager.Remove(Position);
+    }
+
+    private void OnDestroy()
+    {
+        transform.DOKill();
+    }
+
+    void Awake()
+    {
+        Init();
+    }
+
+    protected virtual void Init()
     {
         if (!BlockManager.Blocks.TryAdd(Position, this))
         {
             Destroy(gameObject);
             return;
         }
-    }
 
-    //TODO : 벽돌 배치에 관한 문제
-    protected virtual void Start()
-    {
-        Init();
-    }
-
-    void Init()
-    {
         HP = initialLife <= 0 ? (sbyte)Random.Range(1, 4) : initialLife;
-        tmp.text = HP.ToString();
-    }
-
-    public virtual bool TakeDamage(sbyte i = 1)
-    {
-        HP -= i;
-        if (HP <= 0)
-        {
-            BlockManager.Remove(Position);
-            gameObject.SetActive(false);
-            return true;
-        }
-        else
-        {
-            tmp.text = HP.ToString();
-            return false;
-        }
     }
 
     public void Punching()
@@ -114,4 +128,12 @@ public class Block : MonoBehaviour
             return new BlockPosition(x, y);
         }
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        hp = initialLife;
+        TMP.text = hp.ToString();
+    }
+#endif
 }

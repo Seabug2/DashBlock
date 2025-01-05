@@ -38,7 +38,7 @@ public static class Locator
         }
     }
 
-    public static T GetUI<T>() where T : Singleton
+    public static T Get<T>() where T : Singleton
     {
         Type type = typeof(T);
         if (dict_UIComponent.ContainsKey(type))

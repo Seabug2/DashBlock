@@ -5,14 +5,15 @@ using UnityEngine.Rendering.Universal;
 
 public class ActionBlock : Block
 {
-    SingleAudio singleAudio;
-
+    AudioSource audioSource;
     ColorAdjustments colorAdjustments;
 
-    protected override void Awake()
+    protected override void Init()
     {
-        BlockManager.ActionBlock = this;
+        HP = initialLife;
 
+        BlockManager.ActionBlock = this;
+        audioSource = Camera.main.gameObject.AddComponent<AudioSource>();
         Volume volume = FindObjectOfType<Volume>();
         if (volume != null && volume.profile.TryGet<ColorAdjustments>(out colorAdjustments))
         {
@@ -22,12 +23,6 @@ public class ActionBlock : Block
         {
             Debug.LogError("Color Adjustments를 찾을 수 없습니다. Volume 프로파일을 확인하세요.");
         }
-    }
-
-    protected override void Start()
-    {
-        base.Start();
-        Locator.TryGet(out singleAudio);
     }
 
     public bool IsMoving { get; private set; }
@@ -42,7 +37,7 @@ public class ActionBlock : Block
     public void Wiggle()
     {
         IsMoving = true;
-        singleAudio.PlayOneShot(wiggle);
+        audioSource.PlayOneShot(wiggle);
         transform.DOShakePosition(0.3f, .3f, 20).OnComplete(() => IsMoving = false);
     }
 
@@ -52,6 +47,9 @@ public class ActionBlock : Block
     public AnimationCurve curve;
     public Ease ease;
 
+    /// <summary>
+    /// 벽에 부딪히는 경우
+    /// </summary>
     public void Dash(Vector2 targetPosition)
     {
         IsMoving = true;
@@ -62,12 +60,16 @@ public class ActionBlock : Block
             .OnComplete(() =>
             {
                 IsMoving = false;
-                TakeDamage(1);
-                singleAudio.PlayOneShot(dash);
+                audioSource.PlayOneShot(dash);
                 CameraController.Shake(0.3f, 0.4f);
+                TakeDamage();
             });
     }
 
+
+    /// <summary>
+    /// 벽돌에 부딪히는 경우
+    /// </summary>
     public void Dash(Vector2 targetPosition, Block target)
     {
         IsMoving = true;
@@ -82,13 +84,11 @@ public class ActionBlock : Block
             .SetEase(ease)
             .OnComplete(() =>
             {
-                IsMoving = false;
-                if (target.TakeDamage(1))
+                if (target.TakeDamage())
                 {
                     ShockWaveObject.CallShockWave(transform.position);
-                    bronkenPrtc.transform.position = transform.position;
                     bronkenPrtc.Play();
-                    colorAdjustments.hueShift.value = Mathf.Clamp(colorAdjustments.hueShift.value + Random.Range(30, 60), -180, 180);
+                    colorAdjustments.hueShift.value = Random.Range(-180, 180);
                 }
                 else
                 {
@@ -97,26 +97,19 @@ public class ActionBlock : Block
                     target.Punching();
                 }
 
-                singleAudio.PlayOneShot(dash);
+                IsMoving = false;
+                audioSource.PlayOneShot(dash);
                 CameraController.Shake(0.3f, 0.4f);
-                TakeDamage(1);
+                TakeDamage();
             });
     }
 
-    public override bool TakeDamage(sbyte i = 1)
+    protected override void OnBlockDestroyed()
     {
-        HP -= i;
-        if (HP <= 0)
-        {
-            bronkenPrtc.transform.position = transform.position;
-            bronkenPrtc.Play();
-            gameObject.SetActive(false);
-            return true;
-        }
-        else
-        {
-            tmp.text = HP.ToString();
-            return false;
-        }
+        bronkenPrtc.transform.SetParent(null);
+        colisionPrtc.transform.SetParent(null);
+        bronkenPrtc.Play();
+
+        gameObject.SetActive(false);
     }
 }

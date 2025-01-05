@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 164960472749839222}
   - component: {fileID: 2948228184537880210}
   m_Layer: 0
-  m_Name: blueStone
+  m_Name: Block
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
