@@ -82,7 +82,7 @@ public class Block : MonoBehaviour
         }
     }
 
-    public bool TakeDamage()
+    public virtual bool TakeDamage()
     {
         return --HP <= 0;
     }
