@@ -6,22 +6,21 @@ using UnityEngine.SceneManagement;
 public static class BlockManager
 {
     public static ActionBlock ActionBlock;
+    public static string MapName;
+    public static sbyte limit_x;
+    public static sbyte limit_y;
+
     public static readonly Dictionary<BlockPosition, Block> Blocks = new();
 
     // 모든 블록이 제거된 후 호출될 이벤트
     public static event Action OnCompleteAction;
 
-    // 씬 언로드 시 딕셔너리와 이벤트 초기화
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
-    static void RegisterUnloadSceneEvent()
+    static sbyte targetCount = 0;
+    public static void Reset()
     {
-        SceneManager.sceneUnloaded += (scene) =>
-        {
-            ActionBlock = null;
-            Blocks.Clear();
-            OnCompleteAction = null;
-            Debug.Log($"씬 {scene.name}이 언로드되었습니다. 모든 블록이 제거되었습니다.");
-        };
+        Blocks.Clear();
+        targetCount = 0;
+        OnCompleteAction = null;
     }
 
     // 블록의 최대 위치를 반환
@@ -59,4 +58,30 @@ public static class BlockManager
             Debug.LogWarning($"블록 제거 실패: 키 {key}는 존재하지 않습니다.");
         }
     }
+    /*
+    static readonly Dictionary<Type, Queue<Type>> Pools = new();
+    // 제네릭 타입 추가
+    public static void AddItem<T>(T item)
+    {
+        Type type = typeof(T);
+        if (!Pools.ContainsKey(type))
+        {
+            Pools[type] = new Queue<T>();
+        }
+
+        Pools[type].Enqueue(item);
+    }
+
+    // 제네릭 타입 가져오기
+    public static T GetItem<T>()
+    {
+        Type type = typeof(T);
+        if (Pools.ContainsKey(type) && Pools[type].Count > 0)
+        {
+            return (T)Pools[type].Dequeue();
+        }
+
+        throw new InvalidOperationException($"No items of type {type} found.");
+    }
+    */
 }

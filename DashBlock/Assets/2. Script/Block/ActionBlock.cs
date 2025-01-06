@@ -10,9 +10,19 @@ public class ActionBlock : Block
 
     protected override void Init()
     {
+        if (BlockManager.ActionBlock != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        else
+        {
+            BlockManager.ActionBlock = this;
+            DontDestroyOnLoad(gameObject);
+        }
+
         HP = initialLife;
 
-        BlockManager.ActionBlock = this;
         audioSource = Camera.main.gameObject.AddComponent<AudioSource>();
         Volume volume = FindObjectOfType<Volume>();
         if (volume != null && volume.profile.TryGet<ColorAdjustments>(out colorAdjustments))

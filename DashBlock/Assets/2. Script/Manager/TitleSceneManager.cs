@@ -8,7 +8,7 @@ public class TitleSceneManager : MonoBehaviour
 {
     void Start()
     {
-        if (BlockManager.ActionBlock == null || BlockManager.Blocks.Count == 0) return;
+        CameraController.SetOriginPoistion(Camera.main.transform.position);
 
         Block[] blocks = BlockManager.Blocks.Values.ToArray();
         int size = blocks.Length;
@@ -16,6 +16,9 @@ public class TitleSceneManager : MonoBehaviour
         Block block = blocks[UnityEngine.Random.Range(0, size)];
         BlockManager.ActionBlock.transform.position = block.transform.position;
         BlockManager.Remove(block.Position);
+
+        BlockManager.limit_x = 26;
+        BlockManager.limit_y = 49;
         block.gameObject.SetActive(false);
     }
 }

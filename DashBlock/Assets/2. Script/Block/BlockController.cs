@@ -8,9 +8,6 @@ using UnityEditor;
 
 public class BlockController : Singleton
 {
-    public sbyte limit_x;
-    public sbyte limit_y;
-
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
@@ -61,6 +58,9 @@ public class BlockController : Singleton
         BlockPosition nextPosition;
         while (true)
         {
+            sbyte limit_x = BlockManager.limit_x;
+            sbyte limit_y = BlockManager.limit_y;
+
             nextPosition = targetPos + dir;
 
             if (nextPosition.x < 0 || nextPosition.x > limit_x || nextPosition.y < 0 || nextPosition.y > limit_y)

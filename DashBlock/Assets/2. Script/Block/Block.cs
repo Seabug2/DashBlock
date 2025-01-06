@@ -77,7 +77,7 @@ public class Block : MonoBehaviour
             if (hp <= 0)
             {
                 OnBlockDestroyed();
-                Destroy(gameObject);
+                gameObject.SetActive(false);
             }
         }
     }
@@ -92,10 +92,10 @@ public class Block : MonoBehaviour
         BlockManager.Remove(Position);
     }
 
-    private void OnDestroy()
-    {
-        transform.DOKill();
-    }
+    //private void OnDisable()
+    //{
+    //    transform.DOKill();
+    //}
 
     void Awake()
     {
@@ -132,8 +132,11 @@ public class Block : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        hp = initialLife;
-        TMP.text = hp.ToString();
+        if (!Application.isPlaying)
+        {
+            hp = initialLife;
+            TMP.text = hp.ToString();
+        }
     }
 #endif
 }
