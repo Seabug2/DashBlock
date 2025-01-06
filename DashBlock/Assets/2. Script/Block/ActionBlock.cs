@@ -5,20 +5,27 @@ using UnityEngine.Rendering.Universal;
 
 public class ActionBlock : Block
 {
+    public static ActionBlock instance;
+
     AudioSource audioSource;
     ColorAdjustments colorAdjustments;
 
-    protected override void Init()
+    protected override void Awake()
     {
-        if (BlockManager.ActionBlock != null)
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
         {
             Destroy(gameObject);
             return;
         }
-        else
+
+        if (!gameObject.activeSelf)
         {
-            BlockManager.ActionBlock = this;
-            DontDestroyOnLoad(gameObject);
+            gameObject.SetActive(true);
         }
 
         HP = initialLife;
@@ -35,7 +42,7 @@ public class ActionBlock : Block
         }
     }
 
-    public bool IsMoving { get; private set; }
+    public bool IsMoving = false;
 
     [Header("블록에 부딪혔을 때 재생할 파티클"), Space(10)]
     public ParticleSystem bronkenPrtc;
@@ -104,7 +111,6 @@ public class ActionBlock : Block
                 {
                     colisionPrtc.transform.position = Vector3.Lerp(transform.position, target.transform.position, .5f);
                     colisionPrtc.Play();
-                    target.Punching();
                 }
 
                 IsMoving = false;

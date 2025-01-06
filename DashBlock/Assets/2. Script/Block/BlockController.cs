@@ -68,7 +68,7 @@ public class BlockController : Singleton
                 break;
             }
 
-            if (BlockManager.Blocks.TryGetValue(nextPosition, out target))
+            if (BlockManager.Tiles.TryGetValue(nextPosition, out target))
             {
                 break;
             }

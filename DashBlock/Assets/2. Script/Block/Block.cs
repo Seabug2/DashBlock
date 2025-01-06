@@ -1,7 +1,9 @@
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
-
+using System;
+using System.Collections;
+using System.Collections.Generic;
 public struct BlockPosition
 {
     public sbyte x, y;
@@ -79,6 +81,10 @@ public class Block : MonoBehaviour
                 OnBlockDestroyed();
                 gameObject.SetActive(false);
             }
+            else
+            {
+                Punching();
+            }
         }
     }
 
@@ -89,28 +95,17 @@ public class Block : MonoBehaviour
 
     protected virtual void OnBlockDestroyed()
     {
+        BlockManager.AddItem(GetType(), this);
         BlockManager.Remove(Position);
     }
 
-    //private void OnDisable()
-    //{
-    //    transform.DOKill();
-    //}
-
-    void Awake()
+    protected virtual void Awake()
     {
-        Init();
-    }
-
-    protected virtual void Init()
-    {
-        if (!BlockManager.Blocks.TryAdd(Position, this))
+        if (!BlockManager.Tiles.TryAdd(Position, this))
         {
-            Destroy(gameObject);
+            gameObject.SetActive(false);
             return;
         }
-
-        HP = initialLife <= 0 ? (sbyte)Random.Range(1, 4) : initialLife;
     }
 
     public void Punching()

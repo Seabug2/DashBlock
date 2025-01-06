@@ -10,7 +10,7 @@ public class TitleSceneManager : MonoBehaviour
     {
         CameraController.SetOriginPoistion(Camera.main.transform.position);
 
-        Block[] blocks = BlockManager.Blocks.Values.ToArray();
+        Block[] blocks = BlockManager.Tiles.Values.ToArray();
         int size = blocks.Length;
 
         Block block = blocks[UnityEngine.Random.Range(0, size)];

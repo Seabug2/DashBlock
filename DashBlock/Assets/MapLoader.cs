@@ -1,56 +1,32 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MapLoader : MonoBehaviour
+public class MapLoader : Singleton
 {
-    GameObject block;
-    GameObject actionBlock;
-    //TextAsset csv;
-    string csv;
-
-    //public string loadMapName;
-    private void Start()
-    {
-        //LoadMap(loadMapName);
-    }
-
-    /*
-     * TODO : Ä«¸Ş¶ó »çÀÌÁî Á¶Àı
-     * 1. È­¸éÀº ¼¼·Î °íÁ¤
-     * 2. ½ºÅ©¸°ÀÇ °¡Àå ±ä ÃàÀ» ±âÁØÀ¸·Î ¸ğµç ºí·ÏÀÌ º¸ÀÌµµ·Ï Ä«¸Ş¶ó size¸¦ ¸ÂÃß°í
-     * 3. ºí·ÏµéÀÇ Á¤Áß¾Ó¿¡ Ä«¸Ş¶ó¸¦ À§Ä¡ ½ÃÄÑ¾ßÇÔ
-     * 4. ±× ÀÛ¾÷ÀÌ ¸¶Ä¡¸é Fade In µîÀÇ È­¸éÀüÈ¯ È¿°ú¸¦ ¸¸µé¾î¾ßÇÔ
-     */
-
     public void LoadMap(string fileName)
     {
-        Debug.Log(fileName);
+        string mapData = fileName;
 
-        block = Resources.Load("Block") as GameObject;
-        actionBlock = Resources.Load("ActionBlock") as GameObject;
-        //csv = fileName;//Resources.Load("Maps/" + fileName) as TextAsset;
-
-        string mapData = fileName;//csv.ToString();
         string[] lines = mapData.Split("\n");
-        sbyte limit_y = (sbyte)lines.Length;
+        sbyte limit_y = (sbyte)(lines.Length);
 
-        // Ã¹ ¹øÂ° ÁÙ·Î ¿­ÀÇ °³¼ö¸¦ °è»ê
         string[] numbers = lines[0].Split(",");
         sbyte limit_x = (sbyte)numbers.Length;
 
         SetCamera(limit_x, limit_y);
 
-        // Çà°ú ¿­ Å©±â °Ë»ç
         if (limit_y > 127 || limit_x > 127)
         {
             Debug.LogError("Map size exceeds sbyte limits (127x127).");
-            return; // Çà·Ä Å©±â°¡ 127À» ÃÊ°úÇÏ¸é Á¾·á
+
+            //TODO : ë§µ ë¶ˆëŸ¬ì˜¤ê¸° ì‹¤íŒ¨í•˜ë©´ íƒ€ì´í‹€ ì”¬ìœ¼ë¡œ ì´ë™í•˜ê²Œ ë§Œë“ ë‹¤.
+            return;
         }
 
-        Debug.Log($"Map Size: {limit_x}, {limit_y}");
-
-        bool spawnedActionBlock = false;
+        BlockManager.Reset();
+        BlockManager.limit_x = (sbyte)(limit_x - 1);
+        BlockManager.limit_y = (sbyte)(limit_y - 1);
 
         for (sbyte y = 0; y < limit_y; y++)
         {
@@ -63,15 +39,18 @@ public class MapLoader : MonoBehaviour
                     {
                         continue;
                     }
-                    else if (number <= -1)
+
+                    Vector3 position = new Vector3(x, limit_y - y - 1, 0);
+
+                    if (number <= -1)
                     {
-                        if (spawnedActionBlock) continue;
-                        spawnedActionBlock = true;
-                        Instantiate(actionBlock, new Vector3(x, limit_y - y, 0), Quaternion.identity);
+                        ActionBlock.instance.transform.position = position;
                     }
                     else
                     {
-                        Block b = Instantiate(block, new Vector3(x, limit_y - y, 0), Quaternion.identity).GetComponent<Block>();
+                        Block b = BlockManager.GetItem<Block>();
+                        BlockManager.targetCount++;
+                        b.transform.position = new Vector3(x, limit_y - y - 1, 0);
                         b.HP = number;
                     }
                 }
@@ -81,7 +60,7 @@ public class MapLoader : MonoBehaviour
 
     void SetCamera(sbyte x, sbyte y)
     {
-        if (x > y + 3)
+        if (x > y)
         {
             float bloackSize = Screen.width / x;
             float screenHeight = Screen.height / bloackSize;
