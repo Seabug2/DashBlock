@@ -6,12 +6,13 @@ public class MapLoader : MonoBehaviour
 {
     GameObject block;
     GameObject actionBlock;
-    TextAsset csv;
+    //TextAsset csv;
+    string csv;
 
-    public string loadMapName;
+    //public string loadMapName;
     private void Start()
     {
-        LoadMap(loadMapName);
+        //LoadMap(loadMapName);
     }
 
     /*
@@ -24,11 +25,13 @@ public class MapLoader : MonoBehaviour
 
     public void LoadMap(string fileName)
     {
+        Debug.Log(fileName);
+
         block = Resources.Load("Block") as GameObject;
         actionBlock = Resources.Load("ActionBlock") as GameObject;
-        csv = Resources.Load("Maps/" + fileName) as TextAsset;
+        //csv = fileName;//Resources.Load("Maps/" + fileName) as TextAsset;
 
-        string mapData = csv.ToString();
+        string mapData = fileName;//csv.ToString();
         string[] lines = mapData.Split("\n");
         sbyte limit_y = (sbyte)lines.Length;
 
