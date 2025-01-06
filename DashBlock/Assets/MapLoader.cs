@@ -1,13 +1,18 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class MapLoader : MonoBehaviour
 {
-    TextAsset csv;
+    GameObject block;
+    GameObject actionBlock;
+    //TextAsset csv;
+    string csv;
 
-    public string loadMapName;
+    //public string loadMapName;
     private void Start()
     {
-        LoadMap(loadMapName);
+        //LoadMap(loadMapName);
     }
 
     /*
@@ -20,15 +25,15 @@ public class MapLoader : MonoBehaviour
 
     public void LoadMap(string fileName)
     {
-        BlockManager.Reset();
+        Debug.Log(fileName);
 
-        GameObject block = Resources.Load("Block") as GameObject;
-        GameObject actionBlock = Resources.Load("ActionBlock") as GameObject;
-        csv = Resources.Load("Maps/" + fileName) as TextAsset;
+        block = Resources.Load("Block") as GameObject;
+        actionBlock = Resources.Load("ActionBlock") as GameObject;
+        //csv = fileName;//Resources.Load("Maps/" + fileName) as TextAsset;
 
-        string mapData = csv.ToString();
+        string mapData = fileName;//csv.ToString();
         string[] lines = mapData.Split("\n");
-        sbyte limit_y = (sbyte)(lines.Length);
+        sbyte limit_y = (sbyte)lines.Length;
 
         // 첫 번째 줄로 열의 개수를 계산
         string[] numbers = lines[0].Split(",");
@@ -43,9 +48,8 @@ public class MapLoader : MonoBehaviour
             return; // 행렬 크기가 127을 초과하면 종료
         }
 
-        BlockManager.limit_x = (sbyte)(limit_x - 1);
-        BlockManager.limit_y = (sbyte)(limit_y - 1);
-        
+        Debug.Log($"Map Size: {limit_x}, {limit_y}");
+
         bool spawnedActionBlock = false;
 
         for (sbyte y = 0; y < limit_y; y++)
@@ -63,11 +67,11 @@ public class MapLoader : MonoBehaviour
                     {
                         if (spawnedActionBlock) continue;
                         spawnedActionBlock = true;
-                        Instantiate(actionBlock, new Vector3(x, limit_y - y - 1, 0), Quaternion.identity);
+                        Instantiate(actionBlock, new Vector3(x, limit_y - y, 0), Quaternion.identity);
                     }
                     else
                     {
-                        Block b = Instantiate(block, new Vector3(x, limit_y - y - 1, 0), Quaternion.identity).GetComponent<Block>();
+                        Block b = Instantiate(block, new Vector3(x, limit_y - y, 0), Quaternion.identity).GetComponent<Block>();
                         b.HP = number;
                     }
                 }
@@ -75,44 +79,9 @@ public class MapLoader : MonoBehaviour
         }
     }
 
-    GameObject GetBlock(int blockNumber)
-    {
-        //switch (blockNumber)
-        //{
-        //    case 0: Players Action Block
-        //        break;
-        //    case 1: Basic Block
-        //        break;
-        //    case 2: Solid Block
-        //        break;
-        //    case 3: Sliding Block
-        //        break;
-        //    case 4:
-        //        break;
-        //    case 5:
-        //        break;
-        //    case 6:
-        //        break;
-        //    case 7:
-        //        break;
-        //    case 8:
-        //        break;
-        //    case 9:
-        //        break;
-        //}
-
-        return null;
-    }
-
-
-    public virtual void OnFailedLoaded()
-    {
-        UnityEngine.SceneManagement.SceneManager.LoadScene(0);
-    }
-
     void SetCamera(sbyte x, sbyte y)
     {
-        if (x > y)
+        if (x > y + 3)
         {
             float bloackSize = Screen.width / x;
             float screenHeight = Screen.height / bloackSize;

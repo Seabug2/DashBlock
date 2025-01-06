@@ -676,6 +676,53 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 883463024}
   m_CullTransparentMesh: 1
+--- !u!1 &1086500375
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1086500376}
+  - component: {fileID: 1086500377}
+  m_Layer: 0
+  m_Name: Goolge Sheet Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1086500376
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1086500375}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1086500377
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1086500375}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a96c16fc5253904f8782a22cc5ba8e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  putMapName: Map_Data_0
+  mapData: 
+  mapLoader: {fileID: 1294835978}
 --- !u!1 &1285619947
 GameObject:
   m_ObjectHideFlags: 0
@@ -769,7 +816,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c0e6b3074bfab34f88e25b5069e8561, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  loadMapName: Heart
 --- !u!4 &1294835979
 Transform:
   m_ObjectHideFlags: 0
@@ -1212,7 +1258,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f6afdfd2d3b97649a870958fe4b9abe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _shockwaveTime: 0.75
+  _shockwaveTime: 0.1
   _material: {fileID: 2100000, guid: cff16273b7238e24783cc4361c36e6b6, type: 2}
 --- !u!4 &8800452052725438861
 Transform:
@@ -1238,3 +1284,4 @@ SceneRoots:
   - {fileID: 2126383246}
   - {fileID: 1294835979}
   - {fileID: 64170431}
+  - {fileID: 1086500376}
