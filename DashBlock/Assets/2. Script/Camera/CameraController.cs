@@ -9,7 +9,7 @@ public static class CameraController
     public static Camera Main => main ??= Camera.main;
     static Vector3 originPos;
 
-    public static void SetOriginPoistion(Vector3 originPos)
+    public static void SetOriginPosition(Vector3 originPos)
     {
         CameraController.originPos = originPos;
         Main.transform.position = CameraController.originPos;

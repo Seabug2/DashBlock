@@ -17,8 +17,6 @@ public class GoogleSheetManager : MonoBehaviour
 
     };
 
-    public MapLoader mapLoader;
-
     public string putMapName;
     public string mapData;
 
@@ -35,7 +33,7 @@ public class GoogleSheetManager : MonoBehaviour
         yield return www.SendWebRequest();
 
         mapData = www.downloadHandler.text;
-        mapLoader.LoadMap(mapData);
+        MapLoader.LoadMap(mapData);
         
         
     }

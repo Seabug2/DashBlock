@@ -1,76 +1,133 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
-public class MapLoader : Singleton
+public static class MapLoader
 {
-    public void LoadMap(string fileName)
+    private const sbyte MaxLimit = 127;
+    private const string TitleSceneName = "TitleScene"; // 타이틀 씬 이름을 적절히 설정하세요
+
+    public static void LoadMap(string mapData)
     {
-        string mapData = fileName;
-
-        string[] lines = mapData.Split("\n");
-        sbyte limit_y = (sbyte)(lines.Length);
-
-        string[] numbers = lines[0].Split(",");
-        sbyte limit_x = (sbyte)numbers.Length;
-
-        SetCamera(limit_x, limit_y);
-
-        if (limit_y > 127 || limit_x > 127)
+        if (string.IsNullOrWhiteSpace(mapData))
         {
-            Debug.LogError("Map size exceeds sbyte limits (127x127).");
-
-            //TODO : 맵 불러오기 실패하면 타이틀 씬으로 이동하게 만든다.
+            Debug.LogError("Map data is empty.");
+            LoadTitleScene();
             return;
         }
 
-        BlockManager.Reset();
-        BlockManager.limit_x = (sbyte)(limit_x - 1);
-        BlockManager.limit_y = (sbyte)(limit_y - 1);
+        string[] lines = mapData.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+        sbyte limitY = (sbyte)lines.Length;
 
-        for (sbyte y = 0; y < limit_y; y++)
+        if (limitY > MaxLimit)
         {
-            numbers = lines[y].Split(",");
-            for (sbyte x = 0; x < limit_x; x++)
+            Debug.LogError($"Map height exceeds sbyte limits ({MaxLimit}).");
+            LoadTitleScene();
+            return;
+        }
+
+        string[] firstLineNumbers = lines[0].Split(',');
+        sbyte limitX = (sbyte)firstLineNumbers.Length;
+
+        if (limitX > MaxLimit)
+        {
+            Debug.LogError($"Map width exceeds sbyte limits ({MaxLimit}).");
+            LoadTitleScene();
+            return;
+        }
+
+        SetCamera(limitX, limitY);
+
+        BlockManager.Reset();
+        BlockManager.limit_x = (sbyte)(limitX - 1);
+        BlockManager.limit_y = (sbyte)(limitY - 1);
+
+        for (sbyte y = 0; y < limitY; y++)
+        {
+            string[] numbers = lines[y].Split(',');
+            for (sbyte x = 0; x < limitX; x++)
             {
-                if (sbyte.TryParse(numbers[x], out sbyte number))
+                if (!sbyte.TryParse(numbers[x], out sbyte number))
                 {
-                    if (number == 0)
-                    {
-                        continue;
-                    }
+                    Debug.LogWarning($"Invalid number at ({x}, {y}): '{numbers[x]}'. Skipping.");
+                    continue;
+                }
 
-                    Vector3 position = new Vector3(x, limit_y - y - 1, 0);
+                if (number == 0)
+                {
+                    continue;
+                }
 
-                    if (number <= -1)
-                    {
-                        ActionBlock.instance.transform.position = position;
-                    }
-                    else
-                    {
-                        Block b = BlockManager.GetItem<Block>();
-                        BlockManager.targetCount++;
-                        b.transform.position = new Vector3(x, limit_y - y - 1, 0);
-                        b.HP = number;
-                    }
+                Vector3 position = new Vector3(x, limitY - y - 1, 0);
+
+                if (number == -1)
+                {
+                    SetActionBlockPosition(position);
+                }
+                else
+                {
+                    CreateBlock(number, position);
                 }
             }
         }
     }
 
-    void SetCamera(sbyte x, sbyte y)
+    private static void SetActionBlockPosition(Vector3 position)
     {
-        if (x > y)
+        if (ActionBlock.instance != null)
         {
-            float bloackSize = Screen.width / x;
-            float screenHeight = Screen.height / bloackSize;
-            CameraController.Main.orthographicSize = screenHeight * 0.5f;
-            CameraController.SetOriginPoistion(Vector3.Lerp(Vector3.zero, new Vector3(x - 1, y, -10), .5f));
+            ActionBlock.instance.transform.position = position;
         }
         else
         {
-            CameraController.Main.orthographicSize = (y + 3) * 0.5f;
-            CameraController.SetOriginPoistion(Vector3.Lerp(new Vector3(0, -2, -10), new Vector3(x - 1, y + 1, -10), .5f));
+            Debug.LogError("ActionBlock instance is null.");
         }
+    }
+
+    private static void CreateBlock(sbyte hp, Vector3 position)
+    {
+        Block block = BlockManager.GetItem<Block>();
+        if (block != null)
+        {
+            BlockManager.targetCount++;
+            block.transform.position = position;
+            block.HP = hp;
+        }
+        else
+        {
+            Debug.LogError("Failed to get a Block instance from BlockManager.");
+        }
+    }
+
+    private static void SetCamera(sbyte x, sbyte y)
+    {
+        Camera mainCamera = CameraController.Main;
+        if (mainCamera == null)
+        {
+            Debug.LogError("Main camera is not assigned in CameraController.");
+            return;
+        }
+
+        float blockSize = Screen.width / (float)x;
+
+        if (x > y)
+        {
+            float screenHeight = Screen.height / blockSize;
+            mainCamera.orthographicSize = screenHeight * 0.5f;
+            Vector3 originPosition = Vector3.Lerp(Vector3.zero, new Vector3(x - 1, y, -10), 0.5f);
+            CameraController.SetOriginPosition(originPosition);
+        }
+        else
+        {
+            mainCamera.orthographicSize = (y + 3) * 0.5f;
+            Vector3 originPosition = Vector3.Lerp(new Vector3(0, -2, -10), new Vector3(x - 1, y + 1, -10), 0.5f);
+            CameraController.SetOriginPosition(originPosition);
+        }
+    }
+
+    private static void LoadTitleScene()
+    {
+        SceneManager.LoadScene(TitleSceneName);
     }
 }

@@ -8,7 +8,7 @@ public class TitleSceneManager : MonoBehaviour
 {
     void Start()
     {
-        CameraController.SetOriginPoistion(Camera.main.transform.position);
+        CameraController.SetOriginPosition(Camera.main.transform.position);
 
         Block[] blocks = BlockManager.Tiles.Values.ToArray();
         int size = blocks.Length;
