@@ -25,4 +25,25 @@ public class DynamicBlock : ActionBlock
 
         return --HP <= 0;
     }
+
+    /// <summary>
+    /// 벽에 부딪히는 경우
+    /// </summary>
+    public override void Dash(Vector2 targetPosition)
+    {
+        BlockManager.Blocks.Remove(Position);
+        base.Dash(targetPosition);
+    }
+
+
+    /// <summary>
+    /// 벽돌에 부딪히는 경우
+    /// </summary>
+    public override void Dash(Vector2 targetPosition, Block target)
+    {
+        BlockManager.Blocks.Remove(Position);
+        base.Dash(targetPosition, target);
+    }
+
+
 }

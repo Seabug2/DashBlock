@@ -29,7 +29,7 @@ public static class MapLoader
 
     public async static UniTask MapSheetRequest(string mapName)
     {
-        BlockManager.PlayerBlock.IsMoving = false;
+        BlockManager.PlayerBlock.IsMoving = true;
 
         UnityWebRequest www = UnityWebRequest.Get(url + "&gid=" + $"{mapKeyValuePairs[mapName]}");
         Debug.Log(url + "&gid =" + $"{mapKeyValuePairs[mapName]}");
@@ -43,7 +43,7 @@ public static class MapLoader
 
     public static void LoadMap(string mapData)
     {
-        BlockManager.PlayerBlock.IsMoving = false;
+        BlockManager.PlayerBlock.IsMoving = true;
 
         if (string.IsNullOrWhiteSpace(mapData))
         {
@@ -71,7 +71,7 @@ public static class MapLoader
 
         CameraController.SetPosition(limitX, limitY);
 
-        BlockManager.Reset();
+        BlockManager.ResetGame();
         BlockManager.limit_x = (sbyte)(limitX - 1);
         BlockManager.limit_y = (sbyte)(limitY - 1);
 
@@ -81,42 +81,36 @@ public static class MapLoader
             string[] numbers = lines[y].Split(',');
             for (sbyte x = 0; x < limitX; x++)
             {
-                if (!sbyte.TryParse(numbers[x], out sbyte number))
+                if (string.IsNullOrEmpty(numbers[x]))
                 {
-                    Debug.LogWarning($"Invalid number at ({x}, {y}): '{numbers[x]}'. Skipping.");
                     continue;
                 }
 
-                if (number == 0)
+
+                Block b;
+                string HP = numbers[x].Substring(1);
+                sbyte hp;
+                if (!sbyte.TryParse(HP, out hp))
                 {
-                    continue;
+                    Debug.LogWarning($"Invalid number at ({x}, {y}): '{numbers[x]}'. Skipping.");
                 }
 
                 position = new(x, (sbyte)(limitY - y - 1));
 
-                if (number == -1)
+                // TODO : 이거 다 바꿔야함
+                if (numbers[x] == "0")
                 {
-                    SetPlayerBlock(position, 99);
+                    BlockManager.PlayerBlock.Init(position, hp);
                 }
                 else
                 {
-                    CreateBlock(number, position);
+                    CreateBlock(hp, position);
                 }
             }
         }
 
 
         BlockManager.PlayerBlock.IsMoving = true;
-    }
-
-    private static void SetPlayerBlock(Vector3 position, sbyte hp)
-    {
-        BlockManager.PlayerBlock.transform.position = position;
-        BlockManager.PlayerBlock.HP = hp;
-        if (!BlockManager.PlayerBlock.gameObject.activeSelf)
-        {
-            BlockManager.PlayerBlock.gameObject.SetActive(true);
-        }
     }
 
     private static void CreateBlock(sbyte hp, BlockPosition position)

@@ -113,7 +113,7 @@ public class Block : MonoBehaviour
         HP = hp;
         gameObject.SetActive(true);
 
-        if (!BlockManager.Tiles.TryAdd(Position, this))
+        if (!BlockManager.Blocks.TryAdd(Position, this))
         {
             gameObject.SetActive(false);
             return;
@@ -131,7 +131,7 @@ public class Block : MonoBehaviour
 
         //pull에 자신을 되돌리는 코드
         BlockManager.AddItem(GetType(), this);
-        BlockManager.Tiles.Remove(Position);
+        BlockManager.Blocks.Remove(Position);
         BlockManager.RemainCount--;
 
         gameObject.SetActive(false);

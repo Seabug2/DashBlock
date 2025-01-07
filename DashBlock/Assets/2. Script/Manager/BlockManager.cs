@@ -10,8 +10,8 @@ public static class BlockManager
     public static sbyte limit_x;
     public static sbyte limit_y;
 
-    public static readonly Dictionary<BlockPosition, Block> Tiles = new();
-
+    public static readonly Dictionary<BlockPosition, Block> Blocks = new();
+    
     // 모든 블록이 제거된 후 호출될 이벤트
     public static event Action OnCompleteAction;
 
@@ -33,28 +33,17 @@ public static class BlockManager
         }
     }
 
-    public static void Reset()
+    public static void ResetGame()
     {
-        Tiles.Clear();
-        RemainCount = 0;
+        //Block[] remainBlocks
+
+
+
+        Blocks.Clear();
         OnCompleteAction = null;
+        RemainCount = 0;
     }
 
-    // 블록의 최대 위치를 반환
-    public static BlockPosition GetLimit()
-    {
-        sbyte limit_x = 0;
-        sbyte limit_y = 0;
-
-        foreach (Block b in Tiles.Values)
-        {
-            BlockPosition p = b.Position;
-            if (p.x > limit_x) limit_x = p.x;
-            if (p.y > limit_y) limit_y = p.y;
-        }
-
-        return new BlockPosition(limit_x, limit_y);
-    }
 
     static readonly Dictionary<Type, Queue<Block>> Pools = new();
 
@@ -89,10 +78,6 @@ public static class BlockManager
         throw new InvalidOperationException($"No items of type {type} found.");
     }
 
-    static Dictionary<Type, GameObject> Blocks = new();
-
-
-
     /// <summary>
     /// 블록이 움직이려는 방향으로 경로를 검사를 합니다.
     /// 움직일 수 없는 경우
@@ -121,7 +106,7 @@ public static class BlockManager
                 break;
             }
 
-            if (Tiles.TryGetValue(nextPosition, out hitBlock))
+            if (Blocks.TryGetValue(nextPosition, out hitBlock))
             {
                 break;
             }
@@ -147,4 +132,7 @@ public static class BlockManager
         }
     }
 
+
+
+    public static Block[] BlockType;
 }

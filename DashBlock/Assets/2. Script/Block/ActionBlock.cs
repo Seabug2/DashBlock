@@ -10,12 +10,14 @@ public class ActionBlock : Block
     /// </summary>
     public virtual void Dash(Vector2 targetPosition)
     {
+        BlockManager.PlayerBlock.IsMoving = true;
         transform
             .DOMove(targetPosition, 0.1f)
             .SetEase(ease)
             .OnComplete(() =>
             {
                 CameraController.Shake(0.3f, 0.4f);
+                BlockManager.PlayerBlock.IsMoving = false;
                 TakeDamage();
             });
     }
@@ -26,6 +28,7 @@ public class ActionBlock : Block
     /// </summary>
     public virtual void Dash(Vector2 targetPosition, Block target)
     {
+        BlockManager.PlayerBlock.IsMoving = true;
         if (target.HP == 1)
         {
             targetPosition = target.transform.position;
@@ -37,6 +40,7 @@ public class ActionBlock : Block
             .OnComplete(() =>
             {
                 CameraController.Shake(0.3f, 0.4f);
+                BlockManager.PlayerBlock.IsMoving = false;
                 TakeDamage();
             });
     }

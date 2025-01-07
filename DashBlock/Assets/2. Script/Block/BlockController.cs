@@ -8,8 +8,7 @@ using UnityEditor;
 
 public class BlockController : Singleton
 {
-    PlayerBlock playerBlock;
-    PlayerBlock PlayerBlock => playerBlock ??= BlockManager.PlayerBlock;
+    PlayerBlock PlayerBlock => BlockManager.PlayerBlock;
 
     void Update()
     {
