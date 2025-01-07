@@ -50,6 +50,12 @@ public struct BlockPosition
     {
         return new Vector2(pos.x, pos.y);
     }
+
+    // BlockPosition -> Vector2 (암묵적 변환)
+    public static implicit operator Vector3(BlockPosition pos)
+    {
+        return new Vector3(pos.x, pos.y, 0);
+    }
 }
 
 public class Block : MonoBehaviour
@@ -57,11 +63,17 @@ public class Block : MonoBehaviour
     TextMeshPro tmp;
     protected TextMeshPro TMP => tmp ??= GetComponentInChildren<TextMeshPro>();
 
-    ShockWave shockWaveObject;
-    protected ShockWave ShockWaveObject => shockWaveObject ??= Locator.Get<ShockWave>();
 
-    [SerializeField, Header("초기 체력"), Range(-1, 99), Space(10)]
-    protected sbyte initialLife = -1;
+
+    public BlockPosition Position
+    {
+        get
+        {
+            sbyte x = (sbyte)Mathf.RoundToInt(transform.position.x);
+            sbyte y = (sbyte)Mathf.RoundToInt(transform.position.y);
+            return new BlockPosition(x, y);
+        }
+    }
 
     sbyte hp;
     public sbyte HP
@@ -79,7 +91,6 @@ public class Block : MonoBehaviour
             if (hp <= 0)
             {
                 OnBlockDestroyed();
-                gameObject.SetActive(false);
             }
             else
             {
@@ -93,14 +104,15 @@ public class Block : MonoBehaviour
         return --HP <= 0;
     }
 
-    protected virtual void OnBlockDestroyed()
-    {
-        BlockManager.AddItem(GetType(), this);
-        BlockManager.Remove(Position);
-    }
 
-    protected virtual void Awake()
+
+
+    public virtual void Init(BlockPosition position, sbyte hp)
     {
+        transform.position = position;
+        HP = hp;
+        gameObject.SetActive(true);
+
         if (!BlockManager.Tiles.TryAdd(Position, this))
         {
             gameObject.SetActive(false);
@@ -108,30 +120,26 @@ public class Block : MonoBehaviour
         }
     }
 
+
+
+
+    protected virtual void OnBlockDestroyed()
+    {
+        //모든 블록은 파괴될 때 화면의 색을 바꾼다.
+        //ShockWave를 등록해야할 듯
+        CameraController.BreakEvent();
+
+        //pull에 자신을 되돌리는 코드
+        BlockManager.AddItem(GetType(), this);
+        BlockManager.Tiles.Remove(Position);
+        BlockManager.RemainCount--;
+
+        gameObject.SetActive(false);
+    }
+
     public void Punching()
     {
         transform.DOKill();
         transform.DOPunchScale(Vector3.one, .3f, 20).OnComplete(() => transform.localScale = Vector3.one);
     }
-
-    public BlockPosition Position
-    {
-        get
-        {
-            sbyte x = (sbyte)Mathf.RoundToInt(transform.position.x);
-            sbyte y = (sbyte)Mathf.RoundToInt(transform.position.y);
-            return new BlockPosition(x, y);
-        }
-    }
-
-#if UNITY_EDITOR
-    private void OnValidate()
-    {
-        if (!Application.isPlaying)
-        {
-            hp = initialLife;
-            TMP.text = hp.ToString();
-        }
-    }
-#endif
 }

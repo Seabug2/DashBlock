@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//TODO : ΩÃ±€≈Ê¿∏∑Œ ∏∏µÈ∞Ì ΩÕ¥Ÿ
 public class ShockWave : Singleton
 {
     [SerializeField]

@@ -2,18 +2,52 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Cysharp.Threading.Tasks;
+using UnityEngine.Networking;
 
 public static class MapLoader
 {
     private const sbyte MaxLimit = 127;
-    private const string TitleSceneName = "TitleScene"; // 타이틀 씬 이름을 적절히 설정하세요
+
+    //TODO : 시트의 첫 페이지는 다른 모든 시트의 정보를 저장하고 있음
+
+    public static Dictionary<string, string> mapKeyValuePairs = new()
+    {
+        // Key : Map Name, Value : Map gid;
+        { "Map_Data_Title", "95630366" },
+        { "Map_Data_0", "1553283520" },
+        { "Map_Data_1", "1268210948" },
+        { "Map_Data_2", "573979549" }
+
+    };
+
+    public static string putMapName;
+    public static string mapData;
+
+    const string url = "https://docs.google.com/spreadsheets/d/194NAzYpdn938JB_HMUGmefgy66cs3sOhxcl2iUnOAms/export?format=csv";
+
+
+    public async static UniTask MapSheetRequest(string mapName)
+    {
+        BlockManager.PlayerBlock.IsMoving = false;
+
+        UnityWebRequest www = UnityWebRequest.Get(url + "&gid=" + $"{mapKeyValuePairs[mapName]}");
+        Debug.Log(url + "&gid =" + $"{mapKeyValuePairs[mapName]}");
+        await www.SendWebRequest();
+
+        mapData = www.downloadHandler.text;
+        MapLoader.LoadMap(mapData);
+
+
+    }
 
     public static void LoadMap(string mapData)
     {
+        BlockManager.PlayerBlock.IsMoving = false;
+
         if (string.IsNullOrWhiteSpace(mapData))
         {
             Debug.LogError("Map data is empty.");
-            LoadTitleScene();
             return;
         }
 
@@ -23,7 +57,6 @@ public static class MapLoader
         if (limitY > MaxLimit)
         {
             Debug.LogError($"Map height exceeds sbyte limits ({MaxLimit}).");
-            LoadTitleScene();
             return;
         }
 
@@ -33,16 +66,16 @@ public static class MapLoader
         if (limitX > MaxLimit)
         {
             Debug.LogError($"Map width exceeds sbyte limits ({MaxLimit}).");
-            LoadTitleScene();
             return;
         }
 
-        SetCamera(limitX, limitY);
+        CameraController.SetPosition(limitX, limitY);
 
         BlockManager.Reset();
         BlockManager.limit_x = (sbyte)(limitX - 1);
         BlockManager.limit_y = (sbyte)(limitY - 1);
 
+        BlockPosition position;
         for (sbyte y = 0; y < limitY; y++)
         {
             string[] numbers = lines[y].Split(',');
@@ -59,11 +92,11 @@ public static class MapLoader
                     continue;
                 }
 
-                Vector3 position = new Vector3(x, limitY - y - 1, 0);
+                position = new(x, (sbyte)(limitY - y - 1));
 
                 if (number == -1)
                 {
-                    SetActionBlockPosition(position);
+                    SetPlayerBlock(position, 99);
                 }
                 else
                 {
@@ -71,63 +104,25 @@ public static class MapLoader
                 }
             }
         }
+
+
+        BlockManager.PlayerBlock.IsMoving = true;
     }
 
-    private static void SetActionBlockPosition(Vector3 position)
+    private static void SetPlayerBlock(Vector3 position, sbyte hp)
     {
-        if (ActionBlock.instance != null)
+        BlockManager.PlayerBlock.transform.position = position;
+        BlockManager.PlayerBlock.HP = hp;
+        if (!BlockManager.PlayerBlock.gameObject.activeSelf)
         {
-            ActionBlock.instance.transform.position = position;
-        }
-        else
-        {
-            Debug.LogError("ActionBlock instance is null.");
+            BlockManager.PlayerBlock.gameObject.SetActive(true);
         }
     }
 
-    private static void CreateBlock(sbyte hp, Vector3 position)
+    private static void CreateBlock(sbyte hp, BlockPosition position)
     {
         Block block = BlockManager.GetItem<Block>();
-        if (block != null)
-        {
-            BlockManager.targetCount++;
-            block.transform.position = position;
-            block.HP = hp;
-        }
-        else
-        {
-            Debug.LogError("Failed to get a Block instance from BlockManager.");
-        }
+        block.Init(position, hp);
     }
 
-    private static void SetCamera(sbyte x, sbyte y)
-    {
-        Camera mainCamera = CameraController.Main;
-        if (mainCamera == null)
-        {
-            Debug.LogError("Main camera is not assigned in CameraController.");
-            return;
-        }
-
-        float blockSize = Screen.width / (float)x;
-
-        if (x > y)
-        {
-            float screenHeight = Screen.height / blockSize;
-            mainCamera.orthographicSize = screenHeight * 0.5f;
-            Vector3 originPosition = Vector3.Lerp(Vector3.zero, new Vector3(x - 1, y, -10), 0.5f);
-            CameraController.SetOriginPosition(originPosition);
-        }
-        else
-        {
-            mainCamera.orthographicSize = (y + 3) * 0.5f;
-            Vector3 originPosition = Vector3.Lerp(new Vector3(0, -2, -10), new Vector3(x - 1, y + 1, -10), 0.5f);
-            CameraController.SetOriginPosition(originPosition);
-        }
-    }
-
-    private static void LoadTitleScene()
-    {
-        SceneManager.LoadScene(TitleSceneName);
-    }
 }

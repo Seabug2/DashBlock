@@ -2,8 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SolidBlock : Block
+public class ConcreteBlock : Block
 {
+    void Awake()
+    {
+        //체력 표시할 필요가 없음
+        TMP.gameObject.SetActive(false);
+    }
+
     public override bool TakeDamage()
     {
         Punching();

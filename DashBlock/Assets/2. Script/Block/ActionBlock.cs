@@ -1,83 +1,20 @@
 using DG.Tweening;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
 
 public class ActionBlock : Block
 {
-    public static ActionBlock instance;
-
-    AudioSource audioSource;
-    ColorAdjustments colorAdjustments;
-
-    protected override void Awake()
-    {
-        if (instance == null)
-        {
-            instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        if (!gameObject.activeSelf)
-        {
-            gameObject.SetActive(true);
-        }
-
-        HP = initialLife;
-
-        audioSource = Camera.main.gameObject.AddComponent<AudioSource>();
-        Volume volume = FindObjectOfType<Volume>();
-        if (volume != null && volume.profile.TryGet<ColorAdjustments>(out colorAdjustments))
-        {
-            Debug.Log("Color Adjustments가 성공적으로 로드되었습니다.");
-        }
-        else
-        {
-            Debug.LogError("Color Adjustments를 찾을 수 없습니다. Volume 프로파일을 확인하세요.");
-        }
-    }
-
-    public bool IsMoving = false;
-
-    [Header("블록에 부딪혔을 때 재생할 파티클"), Space(10)]
-    public ParticleSystem bronkenPrtc;
-    public ParticleSystem colisionPrtc;
-
-    /// <summary>
-    /// 이동하지 못했을 때 실행
-    /// </summary>
-    public void Wiggle()
-    {
-        IsMoving = true;
-        audioSource.PlayOneShot(wiggle);
-        transform.DOShakePosition(0.3f, .3f, 20).OnComplete(() => IsMoving = false);
-    }
-
-    public AudioClip wiggle;
-    public AudioClip dash;
-
-    public AnimationCurve curve;
-    public Ease ease;
+    Ease ease = Ease.InQuart;
 
     /// <summary>
     /// 벽에 부딪히는 경우
     /// </summary>
-    public void Dash(Vector2 targetPosition)
+    public virtual void Dash(Vector2 targetPosition)
     {
-        IsMoving = true;
-
         transform
             .DOMove(targetPosition, 0.1f)
             .SetEase(ease)
             .OnComplete(() =>
             {
-                IsMoving = false;
-                audioSource.PlayOneShot(dash);
                 CameraController.Shake(0.3f, 0.4f);
                 TakeDamage();
             });
@@ -87,10 +24,8 @@ public class ActionBlock : Block
     /// <summary>
     /// 벽돌에 부딪히는 경우
     /// </summary>
-    public void Dash(Vector2 targetPosition, Block target)
+    public virtual void Dash(Vector2 targetPosition, Block target)
     {
-        IsMoving = true;
-
         if (target.HP == 1)
         {
             targetPosition = target.transform.position;
@@ -101,31 +36,13 @@ public class ActionBlock : Block
             .SetEase(ease)
             .OnComplete(() =>
             {
-                if (target.TakeDamage())
-                {
-                    ShockWaveObject.CallShockWave(transform.position);
-                    bronkenPrtc.Play();
-                    colorAdjustments.hueShift.value = Random.Range(-180, 180);
-                }
-                else
-                {
-                    colisionPrtc.transform.position = Vector3.Lerp(transform.position, target.transform.position, .5f);
-                    colisionPrtc.Play();
-                }
-
-                IsMoving = false;
-                audioSource.PlayOneShot(dash);
                 CameraController.Shake(0.3f, 0.4f);
                 TakeDamage();
             });
     }
 
-    protected override void OnBlockDestroyed()
-    {
-        bronkenPrtc.transform.SetParent(null);
-        colisionPrtc.transform.SetParent(null);
-        bronkenPrtc.Play();
 
-        gameObject.SetActive(false);
-    }
+
+    public virtual void OnFailedMove()
+    { }
 }
