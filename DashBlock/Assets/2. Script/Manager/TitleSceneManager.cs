@@ -14,7 +14,7 @@ public class TitleSceneManager : MonoBehaviour
         int size = blocks.Length;
 
         Block block = blocks[UnityEngine.Random.Range(0, size)];
-        BlockManager.ActionBlock.transform.position = block.transform.position;
+        ActionBlock.instance.transform.position = block.transform.position;
         BlockManager.Remove(block.Position);
 
         BlockManager.limit_x = 26;
