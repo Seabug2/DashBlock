@@ -1,5 +1,6 @@
 using DG.Tweening;
 using UnityEngine;
+using System;
 
 public class ActionBlock : Block
 {
@@ -65,12 +66,15 @@ public class ActionBlock : Block
             targetPosition = target.transform.position;
         }
 
+        OnStartedMove?.Invoke();
+        OnStartedMove = null;
+
         transform
             .DOMove(targetPosition, .1f)
             .SetEase(Ease.InQuart)
             .OnComplete(() =>
             {
-                target.TakeDamage();
+                target.TakeDamage(HitBlock : this);
 
                 CameraController.Shake(0.3f, 0.4f);
                 ActiveMovingBlocks--;
@@ -78,7 +82,7 @@ public class ActionBlock : Block
             });
     }
 
-
+    public event Action OnStartedMove;
 
 
     public virtual void OnFailedMove()

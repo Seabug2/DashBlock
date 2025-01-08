@@ -1,58 +1,79 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Networking;
+
+public class SheatData
+{
+    //"gid" / "맵 이름"
+    public string Gid { get; private set; }
+    public string MapName { get; private set; }
+
+    public SheatData(string line)
+    {
+        string[] data = line.Split(',');
+        Gid = data[1];
+        MapName = data[2];
+    }
+}
 
 public static class MapLoader
 {
     private const sbyte MaxLimit = 127;
 
-    [RuntimeInitializeOnLoadMethod]
-    static void Init()
-    {
-        string blockData = "";
-
-    }
-
-    //Dictionary<string, Type>
-
-    //TODO : 시트의 첫 페이지는 다른 모든 시트의 정보를 저장하고 있음
-
-    public static Dictionary<string, string> mapKeyValuePairs = new()
-    {
-        // Key : Map Name, Value : Map gid;
-        { "Map_Data_Title", "95630366" },
-        { "Map_Data_0", "1553283520" },
-        { "Map_Data_1", "1268210948" },
-        { "Map_Data_2", "573979549" }
-
-    };
-
-    public static string putMapName;
-    public static string mapData;
-
     const string url = "https://docs.google.com/spreadsheets/d/194NAzYpdn938JB_HMUGmefgy66cs3sOhxcl2iUnOAms/export?format=csv";
 
+    public static SheatData[] SheatDatas;
+    static string titleMapData;
 
-    public async static UniTask MapSheetRequest(string mapName)
+    public async static UniTaskVoid Init()
     {
-        ActionBlock.ActiveMovingBlocks++;
+        string datas = await SheetRequest("0");
+        Debug.Log(datas);
 
-        UnityWebRequest www = UnityWebRequest.Get(url + "&gid=" + $"{mapKeyValuePairs[mapName]}");
-        Debug.Log(url + "&gid =" + $"{mapKeyValuePairs[mapName]}");
-        await www.SendWebRequest();
+        //줄나눔
+        string[] lines = datas.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
 
-        mapData = www.downloadHandler.text;
-        MapLoader.LoadMap(mapData);
+        // 타이틀 정보를 저장
+        SheatData sheat = new(lines[1]);
+        titleMapData = await SheetRequest(sheat.Gid);
+        Debug.Log(titleMapData);
 
 
+
+
+        int mapDataCount = lines.Length - 2; //두 번째 줄까지 제거한 수
+        SheatDatas = new SheatData[mapDataCount];
+        //맵 데이터를 저장
+        for (int i = 2; i < mapDataCount + 2; i++)
+        {
+            sheat = new(lines[i]);
+            SheatDatas[i - 2] = sheat;
+            Debug.Log($"{SheatDatas[i - 2].MapName}을 {i - 2}번에 저장");
+        }
+
+
+
+
+        LoadMap(titleMapData);
     }
 
-    public static void LoadMap(string mapData)
+
+    public async static UniTask<string> SheetRequest(string gid)
     {
-        ActionBlock.ActiveMovingBlocks++;
+        UnityWebRequest www = UnityWebRequest.Get($"{url}&gid={gid}");
+        await www.SendWebRequest();
+
+        string mapData = www.downloadHandler.text;
+        return mapData;
+    }
+
+    public static void LoadMap(string mapData, Action OnCompletedLoadMap = null)
+    {
+        ActionBlock.ActiveMovingBlocks = 100;
+
+
+
         if (string.IsNullOrWhiteSpace(mapData))
         {
             Debug.LogError("Map data is empty.");
@@ -83,9 +104,12 @@ public static class MapLoader
         BlockManager.limit_x = (sbyte)(limitX - 1);
         BlockManager.limit_y = (sbyte)(limitY - 1);
 
+        string[] datas;
+        string blockType;
+
         for (sbyte y = 0; y < limitY; y++)
         {
-            string[] datas = lines[y].Split(',');
+            datas = lines[y].Split(',');
             for (sbyte x = 0; x < limitX; x++)
             {
                 //저장된 데이터가 없는 경우
@@ -96,41 +120,53 @@ public static class MapLoader
 
 
 
-                string blockType = datas[0];
-                
+
+                blockType = datas[0];
+
                 if (blockType == "0")
                 {
                     continue;
                 }
 
-                string HP = datas[x].Substring(1);
+                string hp = datas[x].Substring(1);
 
-                if (!sbyte.TryParse(HP, out sbyte hp))
+                if (!sbyte.TryParse(hp, out sbyte HP))
                 {
                     Debug.LogWarning($"Invalid number at ({x}, {y}): '{datas[x]}'. Skipping.");
                     continue;
                 }
 
 
-                BlockPosition position = new(x, (sbyte)(limitY - y - 1));
+
+
+                Vector3 position = new(x, (sbyte)(limitY - y - 1));
 
                 if (datas[x] == "1")
                 {
-                    BlockManager.PlayerBlock.Init(position, hp);
+                    BlockManager.PlayerBlock.Init(position, HP);
                 }
                 else
                 {
-                    CreateBlock(hp, position);
+                    SetBlock(datas[x], HP, position);
                 }
             }
         }
 
+
+
         ActionBlock.ActiveMovingBlocks = 0;
+        OnCompletedLoadMap?.Invoke();
     }
 
-    private static void CreateBlock(sbyte hp, BlockPosition position)
+
+
+
+    private static void SetBlock(string blockType, sbyte hp, Vector3 position)
     {
-        Block block = BlockManager.GetItem<Block>();
-        block.Init(position, hp);
+        if (int.TryParse(blockType, out int blockTypeID))
+        {
+            Block block = BlockManager.GetBlock<Block>();
+            block.Init(position, hp);
+        }
     }
 }

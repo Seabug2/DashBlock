@@ -73,15 +73,9 @@ public struct BlockPosition
 public class Block : MonoBehaviour
 {
     TextMeshPro tmp;
-    protected TextMeshPro TMP => tmp ??= GetComponentInChildren<TextMeshPro>();
+    protected TextMeshPro TMP => tmp ??= GetComponentInChildren<TextMeshPro>(true);
 
-    public BlockPosition Position
-    {
-        get
-        {
-            return new BlockPosition(transform.position);
-        }
-    }
+    public BlockPosition Position => new (transform.position);
 
     sbyte hp;
     public sbyte HP
@@ -105,17 +99,22 @@ public class Block : MonoBehaviour
         }
     }
 
-    public bool CanBeDestroyed(sbyte damage = 1) => HP == damage;
+    /// <summary>
+    /// 블록의 현재 HP가 받을 데미지 이하라면 파괴될 것
+    /// </summary>
+    public virtual bool CanBeDestroyed(sbyte damage = 1)
+    {
+        return HP <= damage;
+    }
 
-    public virtual void TakeDamage(sbyte damage = 1)
+    public virtual void TakeDamage(sbyte damage = 1, Block HitBlock = null)
     {
         HP -= damage;
     }
 
 
 
-
-    public virtual void Init(BlockPosition position, sbyte hp)
+    public virtual void Init(Vector3 position, sbyte hp)
     {
         transform.position = position;
         HP = hp;
@@ -123,11 +122,10 @@ public class Block : MonoBehaviour
 
         if (!BlockManager.Tiles.TryAdd(Position, this))
         {
-            gameObject.SetActive(false);
+            BlockManager.Enqueue(GetType(), this);
             return;
         }
     }
-
 
 
 
@@ -137,10 +135,9 @@ public class Block : MonoBehaviour
         //ShockWave를 등록해야할 듯
         CameraController.BreakEffect();
 
+        BlockManager.RemainCount--;
         //pull에 자신을 되돌리는 코드
         BlockManager.Enqueue(GetType(), this);
-        BlockManager.Tiles.Remove(Position);
-        BlockManager.RemainCount--;
     }
 
     public void Punching()

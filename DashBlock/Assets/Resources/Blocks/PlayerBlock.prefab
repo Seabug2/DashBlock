@@ -10118,7 +10118,7 @@ GameObject:
   - component: {fileID: 2044867669880251878}
   - component: {fileID: 7621537297511848477}
   m_Layer: 0
-  m_Name: ActionBlock
+  m_Name: PlayerBlock
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

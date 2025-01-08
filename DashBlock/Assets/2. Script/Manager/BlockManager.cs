@@ -71,12 +71,16 @@ public static class BlockManager
 
 
 
-
+    /// <summary>
+    /// 생성한 블록을 저장할 Pool
+    /// </summary>
     static readonly Dictionary<Type, Queue<Block>> Pools = new();
 
-    // 제네릭 타입 추가
     public static void Enqueue(Type type, Block item)
     {
+        Tiles.Remove(item.Position);
+        item.gameObject.SetActive(false);
+
         if (!typeof(Block).IsAssignableFrom(type))
         {
             return;
@@ -88,14 +92,12 @@ public static class BlockManager
         }
 
         Pools[type].Enqueue(item);
-        item.gameObject.SetActive(false);
     }
 
     // 제네릭 타입 가져오기
-    public static T GetItem<T>() where T : Block
+    public static Block GetBlock<T>() where T : Block
     {
         Type type = typeof(T);
-
         //가져오려는 타입의 블록을 저장한 Queue가 존재한다면...
         if (Pools.TryGetValue(type, out Queue<Block> qBlock) && qBlock.Count > 0)
         {

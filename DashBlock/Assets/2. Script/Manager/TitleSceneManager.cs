@@ -1,10 +1,11 @@
+using System;
 using UnityEngine;
+using Cysharp.Threading.Tasks;
 
 public class TitleSceneManager : MonoBehaviour
 {
     void Start()
     {
-        TextAsset csv = Resources.Load("Maps/Title") as TextAsset;
-        MapLoader.LoadMap(csv.text);
+        MapLoader.Init().Forget();
     }
 }

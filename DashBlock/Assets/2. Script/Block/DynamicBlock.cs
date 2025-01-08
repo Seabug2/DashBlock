@@ -5,7 +5,7 @@ using DG.Tweening;
 
 public class DynamicBlock : ActionBlock
 {
-    public override void TakeDamage(sbyte damage = 1)
+    public override void TakeDamage(sbyte damage = 1, Block HitBlock = null)
     {
         if (HP > damage)
         {
@@ -21,18 +21,18 @@ public class DynamicBlock : ActionBlock
                 sbyte y = dir.y > 0 ? (sbyte)1 : (sbyte)-1;
                 CheckLine(new BlockPosition(0, y));
             }
+
+            BlockManager.Tiles.TryAdd(Position , this);
             return;
         }
 
         base.TakeDamage(damage);
     }
 
-    /// <summary>
-    /// 벽돌에 부딪히는 경우
-    /// </summary>
     public override void Dash(Vector2 targetPosition, Block target)
     {
         BlockManager.Tiles.Remove(Position);
+
         base.Dash(targetPosition, target);
     }
 }

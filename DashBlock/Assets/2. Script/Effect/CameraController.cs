@@ -1,7 +1,6 @@
 using DG.Tweening;
 using System;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
@@ -15,7 +14,7 @@ public static class CameraController
     {
         get
         {
-            if (colorAdjustments)
+            if (colorAdjustments == null)
             {
                 Volume volume = Main.GetComponent<Volume>();
                 if (volume != null && volume.profile.TryGet(out colorAdjustments))
@@ -39,24 +38,26 @@ public static class CameraController
 
 
 
-    public  static void SetPosition(sbyte x, sbyte y)
+    public static void SetPosition(float x, float y)
     {
-        float blockSize = Screen.width / (float)x;
+        Debug.Log($"카메라 위치를 조정합니다. Screen.width : {Screen.width} / Screen.height : {Screen.height}");
 
-        Vector3 originPos;
+        float blockSize = Screen.width / x;
+        Debug.Log($"블록 사이즈 :: {blockSize}");
+
         if (x > y)
         {
             float screenHeight = Screen.height / blockSize;
             Main.orthographicSize = screenHeight * 0.5f;
-            originPos = Vector3.Lerp(Vector3.zero, new Vector3(x - 1, y, -10), 0.5f);
+            CameraController.originPos = Vector3.Lerp(Vector3.zero, new Vector3(x - 1, y, -10), 0.5f);
         }
         else
         {
             Main.orthographicSize = (y + 3) * 0.5f;
-            originPos = Vector3.Lerp(new Vector3(0, -2, -10), new Vector3(x - 1, y + 1, -10), 0.5f);
+            CameraController.originPos = Vector3.Lerp(new Vector3(0, -2, -10), new Vector3(x - 1, y + 1, -10), 0.5f);
         }
 
-        CameraController.originPos = originPos;
+        Main.transform.position = CameraController.originPos;
     }
 
 
@@ -64,7 +65,6 @@ public static class CameraController
 
     public static void Shake(float duration, float power, Action OnCompleted = null)
     {
-        if (Main == null) return;
         Main.transform.DOKill();
         Main.transform.DOShakePosition(duration * 0.9f, power, 20).OnComplete(() =>
         {
@@ -77,9 +77,6 @@ public static class CameraController
 
     public static void BreakEffect()
     {
-        if (ColorAdjustments != null)
-        {
-            ColorAdjustments.hueShift.value = UnityEngine.Random.Range(-180, 180);
-        }
+        ColorAdjustments.hueShift.value = UnityEngine.Random.Range(-180, 180);
     }
 }

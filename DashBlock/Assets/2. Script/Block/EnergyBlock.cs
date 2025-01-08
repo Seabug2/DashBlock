@@ -4,12 +4,14 @@ using UnityEngine;
 
 public class EnergyBlock : Block
 {
-    public override void TakeDamage(sbyte damage = 1)
+    public override void TakeDamage(sbyte damage = 1, Block HitBlock = null)
     {
-        int sum = BlockManager.PlayerBlock.HP + HP;
-
-        // TODO : 오버플로우 조심하기
-        BlockManager.PlayerBlock.HP = (sbyte)Mathf.Min(sum, 99);
-        HP = 0;
+        if (HitBlock != null)
+        {
+            int sum = HitBlock.HP + HP;
+            // TODO : 오버플로우 조심하기
+            HitBlock.HP = (sbyte)Mathf.Clamp(sum, 1, 99);
+            HP = 0;
+        }
     }
 }
