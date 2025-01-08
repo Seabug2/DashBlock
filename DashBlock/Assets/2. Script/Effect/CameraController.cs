@@ -75,7 +75,7 @@ public static class CameraController
 
 
 
-    public static void BreakEvent()
+    public static void BreakEffect()
     {
         if (ColorAdjustments != null)
         {

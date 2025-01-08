@@ -10115,8 +10115,8 @@ GameObject:
   m_Component:
   - component: {fileID: 2166998104113280755}
   - component: {fileID: 4325699177183579738}
-  - component: {fileID: 2767781205902123527}
   - component: {fileID: 2044867669880251878}
+  - component: {fileID: 7621537297511848477}
   m_Layer: 0
   m_Name: ActionBlock
   m_TagString: Untagged
@@ -10195,48 +10195,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &2767781205902123527
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9017398734975385084}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1a8ada6a2770a3a4897e274bcaeb8097, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  initialLife: 99
-  bronkenPrtc: {fileID: 2773755488342611191}
-  colisionPrtc: {fileID: 1326571813391552417}
-  wiggle: {fileID: 8300000, guid: ed557794f959cf74e9a13c4adcbe1b55, type: 3}
-  dash: {fileID: 8300000, guid: 9473f16784dee244aa9fdc6c81f3c90e, type: 3}
-  curve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 2
-      outSlope: 2
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  ease: 11
 --- !u!114 &2044867669880251878
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10249,6 +10207,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 700544a8a424e0e449916fdf6a1cf0f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  limit_x: 6
-  limit_y: 13
   minSwipeDistance: 50
+--- !u!114 &7621537297511848477
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9017398734975385084}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2a6aa3525b6ebf4d8b730545dda89d3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  wiggle: {fileID: 0}
+  dash: {fileID: 0}
+  IsMoving: 0
+  bronkenPrtc: {fileID: 0}
+  colisionPrtc: {fileID: 0}

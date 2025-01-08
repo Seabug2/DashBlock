@@ -12,23 +12,23 @@ public class BlockController : Singleton
 
     void Update()
     {
-        if (BlockManager.PlayerBlock.IsMoving) return;
+        if (ActionBlock.IsMoving) return;
 
         if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
         {
-            BlockManager.CheckLine(PlayerBlock, new BlockPosition(0, 1));
+            PlayerBlock.CheckLine(new BlockPosition(0, 1));
         }
         else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
         {
-            BlockManager.CheckLine(PlayerBlock, new BlockPosition(1, 0));
+            PlayerBlock.CheckLine(new BlockPosition(1, 0));
         }
         else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            BlockManager.CheckLine(PlayerBlock, new BlockPosition(-1, 0));
+            PlayerBlock.CheckLine(new BlockPosition(-1, 0));
         }
         else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
         {
-            BlockManager.CheckLine(PlayerBlock, new BlockPosition(0, -1));
+            PlayerBlock.CheckLine(new BlockPosition(0, -1));
         }
 
 #if UNITY_IOS || UNITY_ANDROID
@@ -51,6 +51,7 @@ public class BlockController : Singleton
         }
 #endif
     }
+
     private Vector2 touchStartPosition;
     private Vector2 touchEndPosition;
     bool pressed = false;
@@ -76,12 +77,12 @@ public class BlockController : Singleton
         if (Mathf.Abs(swipeVector.x) > Mathf.Abs(swipeVector.y))
         {
             sbyte x = swipeVector.x > 0 ? (sbyte)1 : (sbyte)-1;
-            BlockManager.CheckLine(PlayerBlock, new BlockPosition(x, 0));
+            PlayerBlock.CheckLine(new BlockPosition(x, 0));
         }
         else
         {
             sbyte y = swipeVector.y > 0 ? (sbyte)1 : (sbyte)-1;
-            BlockManager.CheckLine(PlayerBlock, new BlockPosition(0, y));
+            PlayerBlock.CheckLine(new BlockPosition(0, y));
         }
     }
 }

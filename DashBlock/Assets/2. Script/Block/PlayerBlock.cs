@@ -5,8 +5,13 @@ using UnityEngine;
 
 public class PlayerBlock : ActionBlock
 {
+    [Header("부딪혔을 때 재생할 오디오"), Space(10)]
     public AudioClip wiggle;
     public AudioClip dash;
+
+    [Header("부딪혔을 때 재생할 파티클"), Space(10)]
+    public ParticleSystem bronkenPrtc;
+    public ParticleSystem colisionPrtc;
 
     void Awake()
     {
@@ -39,43 +44,28 @@ public class PlayerBlock : ActionBlock
         TMP.gameObject.SetActive(true);
     }
 
-    public bool IsMoving = false;
-
-    [Header("부딪혔을 때 재생할 파티클"), Space(10)]
-    public ParticleSystem bronkenPrtc;
-    public ParticleSystem colisionPrtc;
 
 
-    public override bool TakeDamage()
-    {
-        if (HP == 1)
-        {
-            OnFaildGame();
-        }
-
-        return --HP <= 0;
-    }
-
-    
-    void OnFaildGame()
-    {
-        //현재 게임을 다시 한다.
-        // TODO : 파티클을 재생한다.
-        GetComponent<SpriteRenderer>().enabled = false;
-        TMP.gameObject.SetActive(false);
-    }
 
     public override void OnFailedMove()
     {
-        // Wiggle 효과
-        IsMoving = true;
+        ActiveMovingBlocks++;
         // TODO : 이동에 실패했을 때 소리를 재생
-        transform.DOShakePosition(0.3f, .3f, 20).OnComplete(() => IsMoving = false);
+        transform
+            .DOShakePosition(0.3f, .3f, 20)
+            .OnComplete(() => ActiveMovingBlocks--);
     }
 
     protected override void OnBlockDestroyed()
     {
         bronkenPrtc.Play();
-        gameObject.SetActive(false);
+        OnFaildGame();
+    }
+
+    void OnFaildGame()
+    {
+        //TODO : 플레이어의 블록이 부서졌을 때 일어날 이벤트 추가 해야함
+        GetComponent<SpriteRenderer>().enabled = false;
+        TMP.gameObject.SetActive(false);
     }
 }

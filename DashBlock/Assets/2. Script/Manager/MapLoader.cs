@@ -9,6 +9,15 @@ public static class MapLoader
 {
     private const sbyte MaxLimit = 127;
 
+    [RuntimeInitializeOnLoadMethod]
+    static void Init()
+    {
+        string blockData = "";
+
+    }
+
+    //Dictionary<string, Type>
+
     //TODO : 시트의 첫 페이지는 다른 모든 시트의 정보를 저장하고 있음
 
     public static Dictionary<string, string> mapKeyValuePairs = new()
@@ -29,7 +38,7 @@ public static class MapLoader
 
     public async static UniTask MapSheetRequest(string mapName)
     {
-        BlockManager.PlayerBlock.IsMoving = true;
+        ActionBlock.ActiveMovingBlocks++;
 
         UnityWebRequest www = UnityWebRequest.Get(url + "&gid=" + $"{mapKeyValuePairs[mapName]}");
         Debug.Log(url + "&gid =" + $"{mapKeyValuePairs[mapName]}");
@@ -43,8 +52,7 @@ public static class MapLoader
 
     public static void LoadMap(string mapData)
     {
-        BlockManager.PlayerBlock.IsMoving = true;
-
+        ActionBlock.ActiveMovingBlocks++;
         if (string.IsNullOrWhiteSpace(mapData))
         {
             Debug.LogError("Map data is empty.");
@@ -75,30 +83,38 @@ public static class MapLoader
         BlockManager.limit_x = (sbyte)(limitX - 1);
         BlockManager.limit_y = (sbyte)(limitY - 1);
 
-        BlockPosition position;
         for (sbyte y = 0; y < limitY; y++)
         {
-            string[] numbers = lines[y].Split(',');
+            string[] datas = lines[y].Split(',');
             for (sbyte x = 0; x < limitX; x++)
             {
-                if (string.IsNullOrEmpty(numbers[x]))
+                //저장된 데이터가 없는 경우
+                if (string.IsNullOrEmpty(datas[x]))
                 {
                     continue;
                 }
 
 
-                Block b;
-                string HP = numbers[x].Substring(1);
-                sbyte hp;
-                if (!sbyte.TryParse(HP, out hp))
+
+                string blockType = datas[0];
+                
+                if (blockType == "0")
                 {
-                    Debug.LogWarning($"Invalid number at ({x}, {y}): '{numbers[x]}'. Skipping.");
+                    continue;
                 }
 
-                position = new(x, (sbyte)(limitY - y - 1));
+                string HP = datas[x].Substring(1);
 
-                // TODO : 이거 다 바꿔야함
-                if (numbers[x] == "0")
+                if (!sbyte.TryParse(HP, out sbyte hp))
+                {
+                    Debug.LogWarning($"Invalid number at ({x}, {y}): '{datas[x]}'. Skipping.");
+                    continue;
+                }
+
+
+                BlockPosition position = new(x, (sbyte)(limitY - y - 1));
+
+                if (datas[x] == "1")
                 {
                     BlockManager.PlayerBlock.Init(position, hp);
                 }
@@ -109,8 +125,7 @@ public static class MapLoader
             }
         }
 
-
-        BlockManager.PlayerBlock.IsMoving = true;
+        ActionBlock.ActiveMovingBlocks = 0;
     }
 
     private static void CreateBlock(sbyte hp, BlockPosition position)
@@ -118,5 +133,4 @@ public static class MapLoader
         Block block = BlockManager.GetItem<Block>();
         block.Init(position, hp);
     }
-
 }

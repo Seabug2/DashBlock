@@ -5,17 +5,46 @@ using UnityEngine.SceneManagement;
 
 public static class BlockManager
 {
-    public static PlayerBlock PlayerBlock;
+    /// <summary>
+    /// 블록 프리팹
+    /// </summary>
+    public static readonly Dictionary<Type, Block> Blocks = new();
+
+    [RuntimeInitializeOnLoadMethod]
+    static void LoadAllBlock()
+    {
+        GameObject[] blocks = Resources.LoadAll<GameObject>("Blocks");
+        foreach (GameObject block in blocks)
+        {
+            if (block.TryGetComponent(out Block instance))
+            {
+                Type type = instance.GetType();
+                if(!Blocks.TryAdd(type, instance))
+                {
+                    Debug.LogWarning($"{block.name} 추가 실패");
+                }
+            }
+        }
+    }
+
+    public static PlayerBlock PlayerBlock = null;
+
+
+
 
     public static sbyte limit_x;
     public static sbyte limit_y;
 
-    public static readonly Dictionary<BlockPosition, Block> Blocks = new();
-    
+    public static readonly Dictionary<BlockPosition, Block> Tiles = new();
+
     // 모든 블록이 제거된 후 호출될 이벤트
     public static event Action OnCompleteAction;
 
     static sbyte remainCount = 0;
+
+    /// <summary>
+    /// 0을 할당하려면 remainCount을 사용하시오
+    /// </summary>
     public static sbyte RemainCount
     {
         get
@@ -26,7 +55,7 @@ public static class BlockManager
         {
             remainCount = value;
 
-            if(remainCount == 0)
+            if (remainCount == 0)
             {
                 OnCompleteAction?.Invoke();
             }
@@ -35,20 +64,18 @@ public static class BlockManager
 
     public static void ResetGame()
     {
-        //Block[] remainBlocks
-
-
-
-        Blocks.Clear();
-        OnCompleteAction = null;
-        RemainCount = 0;
+        //TODO : 생성된 모든 블록을 다시 Pool에 넣는다.
+        Tiles.Clear();
+        remainCount = 0;
     }
+
+
 
 
     static readonly Dictionary<Type, Queue<Block>> Pools = new();
 
     // 제네릭 타입 추가
-    public static void AddItem(Type type, Block item)
+    public static void Enqueue(Type type, Block item)
     {
         if (!typeof(Block).IsAssignableFrom(type))
         {
@@ -61,78 +88,28 @@ public static class BlockManager
         }
 
         Pools[type].Enqueue(item);
+        item.gameObject.SetActive(false);
     }
 
     // 제네릭 타입 가져오기
     public static T GetItem<T>() where T : Block
     {
         Type type = typeof(T);
+
+        //가져오려는 타입의 블록을 저장한 Queue가 존재한다면...
         if (Pools.TryGetValue(type, out Queue<Block> qBlock) && qBlock.Count > 0)
         {
             return (T)qBlock.Dequeue();
         }
+        //Queue가 존재하지 않다면
         else
         {
-            //return
+            if (Blocks.TryGetValue(type, out Block instance))
+            {
+                Block block = GameObject.Instantiate(instance);
+                return (T)block;
+            }
         }
         throw new InvalidOperationException($"No items of type {type} found.");
     }
-
-    /// <summary>
-    /// 블록이 움직이려는 방향으로 경로를 검사를 합니다.
-    /// 움직일 수 없는 경우
-    /// 벽 끝까지 미끄러지는 경우
-    /// 블록에 부딪히는 경우
-    /// </summary>
-    /// <param name="dynamicBlock">움직이려는 블록</param>
-    /// <param name="dir">움직이려는 방향</param>
-    public static void CheckLine(ActionBlock ActionBlock, BlockPosition dir)
-    {
-        BlockPosition targetPos = ActionBlock.Position;
-        int moveDistance = 0;
-
-        //부딪힐 블록
-        Block hitBlock = null;
-        BlockPosition nextPosition;
-        while (true)
-        {
-            sbyte limit_x = BlockManager.limit_x;
-            sbyte limit_y = BlockManager.limit_y;
-
-            nextPosition = targetPos + dir;
-
-            if (nextPosition.x < 0 || nextPosition.x > limit_x || nextPosition.y < 0 || nextPosition.y > limit_y)
-            {
-                break;
-            }
-
-            if (Blocks.TryGetValue(nextPosition, out hitBlock))
-            {
-                break;
-            }
-
-            targetPos = nextPosition;
-            moveDistance++;
-        }
-
-        if (moveDistance < 1)
-        {
-            ActionBlock.OnFailedMove();
-        }
-        else
-        {
-            if (hitBlock == null)
-            {
-                ActionBlock.Dash(targetPos);
-            }
-            else
-            {
-                ActionBlock.Dash(targetPos, hitBlock);
-            }
-        }
-    }
-
-
-
-    public static Block[] BlockType;
 }

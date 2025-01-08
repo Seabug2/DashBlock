@@ -3,47 +3,81 @@ using UnityEngine;
 
 public class ActionBlock : Block
 {
-    Ease ease = Ease.InQuart;
+    public static sbyte ActiveMovingBlocks = 0;
+    public static bool IsMoving => ActiveMovingBlocks > 0;
 
     /// <summary>
-    /// 벽에 부딪히는 경우
+    /// 블록이 움직이려는 방향으로 경로를 검사를 합니다.
+    /// 움직일 수 없는 경우
+    /// 벽 끝까지 미끄러지는 경우
+    /// 블록에 부딪히는 경우
     /// </summary>
-    public virtual void Dash(Vector2 targetPosition)
+    /// <param name="dynamicBlock">움직이려는 블록</param>
+    /// <param name="dir">움직이려는 방향</param>
+    public void CheckLine(BlockPosition dir)
     {
-        BlockManager.PlayerBlock.IsMoving = true;
-        transform
-            .DOMove(targetPosition, 0.1f)
-            .SetEase(ease)
-            .OnComplete(() =>
-            {
-                CameraController.Shake(0.3f, 0.4f);
-                BlockManager.PlayerBlock.IsMoving = false;
-                TakeDamage();
-            });
-    }
+        BlockPosition targetPos = new(transform.position);
+        sbyte moveDistance = 0;
 
+        //부딪힐 블록
+        Block hitBlock = null;
+        BlockPosition nextPosition;
+        while (true)
+        {
+            sbyte limit_x = BlockManager.limit_x;
+            sbyte limit_y = BlockManager.limit_y;
+
+            nextPosition = targetPos + dir;
+
+            if (nextPosition.x < 0 || nextPosition.x > limit_x || nextPosition.y < 0 || nextPosition.y > limit_y)
+            {
+                break;
+            }
+
+            if (BlockManager.Tiles.TryGetValue(nextPosition, out hitBlock))
+            {
+                break;
+            }
+
+            targetPos = nextPosition;
+            moveDistance++;
+        }
+
+        if (moveDistance < 1)
+        {
+            OnFailedMove();
+        }
+        else
+        {
+            Dash(targetPos, hitBlock);
+        }
+    }
 
     /// <summary>
     /// 벽돌에 부딪히는 경우
     /// </summary>
     public virtual void Dash(Vector2 targetPosition, Block target)
     {
-        BlockManager.PlayerBlock.IsMoving = true;
-        if (target.HP == 1)
+        ActiveMovingBlocks++;
+
+        if (target != null && target.CanBeDestroyed())
         {
             targetPosition = target.transform.position;
         }
 
         transform
             .DOMove(targetPosition, .1f)
-            .SetEase(ease)
+            .SetEase(Ease.InQuart)
             .OnComplete(() =>
             {
+                target.TakeDamage();
+
                 CameraController.Shake(0.3f, 0.4f);
-                BlockManager.PlayerBlock.IsMoving = false;
+                ActiveMovingBlocks--;
                 TakeDamage();
             });
     }
+
 
 
 

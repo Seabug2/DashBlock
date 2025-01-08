@@ -13,6 +13,18 @@ public struct BlockPosition
         this.y = y;
     }
 
+    public BlockPosition(Vector2 position)
+    {
+        x = (sbyte)Mathf.RoundToInt(position.x);
+        y = (sbyte)Mathf.RoundToInt(position.y);
+    }
+
+    public BlockPosition(Vector3 position)
+    {
+        x = (sbyte)Mathf.RoundToInt(position.x);
+        y = (sbyte)Mathf.RoundToInt(position.y);
+    }
+
     public static BlockPosition operator +(BlockPosition a, BlockPosition b)
     {
         return new BlockPosition((sbyte)(a.x + b.x), (sbyte)(a.y + b.y));
@@ -63,15 +75,11 @@ public class Block : MonoBehaviour
     TextMeshPro tmp;
     protected TextMeshPro TMP => tmp ??= GetComponentInChildren<TextMeshPro>();
 
-
-
     public BlockPosition Position
     {
         get
         {
-            sbyte x = (sbyte)Mathf.RoundToInt(transform.position.x);
-            sbyte y = (sbyte)Mathf.RoundToInt(transform.position.y);
-            return new BlockPosition(x, y);
+            return new BlockPosition(transform.position);
         }
     }
 
@@ -86,22 +94,22 @@ public class Block : MonoBehaviour
         {
             hp = value;
 
-            TMP.text = hp.ToString();
-
             if (hp <= 0)
             {
                 OnBlockDestroyed();
+                return;
             }
-            else
-            {
-                Punching();
-            }
+
+            TMP.text = hp.ToString();
+            Punching();
         }
     }
 
-    public virtual bool TakeDamage()
+    public bool CanBeDestroyed(sbyte damage = 1) => HP == damage;
+
+    public virtual void TakeDamage(sbyte damage = 1)
     {
-        return --HP <= 0;
+        HP -= damage;
     }
 
 
@@ -113,7 +121,7 @@ public class Block : MonoBehaviour
         HP = hp;
         gameObject.SetActive(true);
 
-        if (!BlockManager.Blocks.TryAdd(Position, this))
+        if (!BlockManager.Tiles.TryAdd(Position, this))
         {
             gameObject.SetActive(false);
             return;
@@ -127,14 +135,12 @@ public class Block : MonoBehaviour
     {
         //모든 블록은 파괴될 때 화면의 색을 바꾼다.
         //ShockWave를 등록해야할 듯
-        CameraController.BreakEvent();
+        CameraController.BreakEffect();
 
         //pull에 자신을 되돌리는 코드
-        BlockManager.AddItem(GetType(), this);
-        BlockManager.Blocks.Remove(Position);
+        BlockManager.Enqueue(GetType(), this);
+        BlockManager.Tiles.Remove(Position);
         BlockManager.RemainCount--;
-
-        gameObject.SetActive(false);
     }
 
     public void Punching()
