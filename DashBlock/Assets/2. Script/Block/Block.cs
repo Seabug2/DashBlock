@@ -1,9 +1,6 @@
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
-using System;
-using System.Collections;
-using System.Collections.Generic;
 public struct BlockPosition
 {
     public sbyte x, y;

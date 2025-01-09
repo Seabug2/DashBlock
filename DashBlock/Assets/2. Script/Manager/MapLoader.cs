@@ -159,7 +159,8 @@ public static class MapLoader
 
     private static void SetBlock(char blockType, sbyte hp, Vector3 position)
     {
-        Block block = BlockManager.GetBlock((int)blockType);
+        Block block = BlockManager.GetBlock(blockType - '0');
+        Debug.Log((int)blockType);
         block.Init(position, hp);
     }
 }

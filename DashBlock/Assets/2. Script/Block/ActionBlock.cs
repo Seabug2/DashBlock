@@ -74,7 +74,7 @@ public class ActionBlock : Block
             .SetEase(Ease.InQuart)
             .OnComplete(() =>
             {
-                target.TakeDamage(HitBlock : this);
+                target?.TakeDamage(HitBlock : this);
 
                 CameraController.Shake(0.3f, 0.4f);
                 ActiveMovingBlocks--;
