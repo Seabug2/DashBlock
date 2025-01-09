@@ -114,6 +114,9 @@ public class Block : MonoBehaviour
 
 
 
+
+    public int myQueueNumber;
+
     public virtual void Init(Vector3 position, sbyte hp)
     {
         transform.position = position;
@@ -122,10 +125,11 @@ public class Block : MonoBehaviour
 
         if (!BlockManager.Tiles.TryAdd(Position, this))
         {
-            BlockManager.Enqueue(GetType(), this);
+            BlockManager.Enqueue(myQueueNumber, this);
             return;
         }
     }
+
 
 
 
@@ -137,7 +141,7 @@ public class Block : MonoBehaviour
 
         BlockManager.RemainCount--;
         //pull에 자신을 되돌리는 코드
-        BlockManager.Enqueue(GetType(), this);
+        BlockManager.Enqueue(myQueueNumber, this);
     }
 
     public void Punching()

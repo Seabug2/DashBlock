@@ -1,17 +1,17 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu]
 public class BlockPrefabsList : ScriptableObject
 {
-    public Block[] blocks;
+    public GameObject[] blocks;
 
-    public Block this[int index]
+    public int Length => blocks.Length;
+
+    public GameObject this[int index]
     {
         get
         {
-            if (index < 1 || index > blocks.Length)
+            if (index < 1 || index >= blocks.Length)
             {
                 return blocks[0];
             }

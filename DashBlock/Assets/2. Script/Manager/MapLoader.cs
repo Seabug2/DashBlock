@@ -28,6 +28,9 @@ public static class MapLoader
 
     public async static UniTaskVoid Init()
     {
+        BlockManager.BlockData = Resources.Load<BlockPrefabsList>("Block_List");
+
+
         string datas = await SheetRequest("0");
         Debug.Log(datas);
 
@@ -105,7 +108,7 @@ public static class MapLoader
         BlockManager.limit_y = (sbyte)(limitY - 1);
 
         string[] datas;
-        string blockType;
+        char blockType;
 
         for (sbyte y = 0; y < limitY; y++)
         {
@@ -121,16 +124,12 @@ public static class MapLoader
 
 
 
-                blockType = datas[0];
-
-                if (blockType == "0")
-                {
-                    continue;
-                }
+                blockType = datas[x][0];
+                Debug.Log($"생성하려는 타입 ID = {blockType}");
 
                 string hp = datas[x].Substring(1);
 
-                if (!sbyte.TryParse(hp, out sbyte HP))
+                if (!sbyte.TryParse(hp, out sbyte HP) || HP == 0)
                 {
                     Debug.LogWarning($"Invalid number at ({x}, {y}): '{datas[x]}'. Skipping.");
                     continue;
@@ -141,13 +140,13 @@ public static class MapLoader
 
                 Vector3 position = new(x, (sbyte)(limitY - y - 1));
 
-                if (datas[x] == "1")
+                if (blockType == '1')
                 {
                     BlockManager.PlayerBlock.Init(position, HP);
                 }
                 else
                 {
-                    SetBlock(datas[x], HP, position);
+                    SetBlock(blockType, HP, position);
                 }
             }
         }
@@ -158,15 +157,9 @@ public static class MapLoader
         OnCompletedLoadMap?.Invoke();
     }
 
-
-
-
-    private static void SetBlock(string blockType, sbyte hp, Vector3 position)
+    private static void SetBlock(char blockType, sbyte hp, Vector3 position)
     {
-        if (int.TryParse(blockType, out int blockTypeID))
-        {
-            Block block = BlockManager.GetBlock<Block>();
-            block.Init(position, hp);
-        }
+        Block block = BlockManager.GetBlock((int)blockType);
+        block.Init(position, hp);
     }
 }

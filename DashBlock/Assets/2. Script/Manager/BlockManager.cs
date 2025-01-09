@@ -19,7 +19,7 @@ public static class BlockManager
             if (block.TryGetComponent(out Block instance))
             {
                 Type type = instance.GetType();
-                if(!Blocks.TryAdd(type, instance))
+                if (!Blocks.TryAdd(type, instance))
                 {
                     Debug.LogWarning($"{block.name} 추가 실패");
                 }
@@ -74,44 +74,52 @@ public static class BlockManager
     /// <summary>
     /// 생성한 블록을 저장할 Pool
     /// </summary>
-    static readonly Dictionary<Type, Queue<Block>> Pools = new();
+    static Queue<Block>[] Pools;
 
-    public static void Enqueue(Type type, Block item)
+    public static void Enqueue(int typeID, Block item)
     {
         Tiles.Remove(item.Position);
         item.gameObject.SetActive(false);
+        Pools[typeID].Enqueue(item);
+    }
 
-        if (!typeof(Block).IsAssignableFrom(type))
+
+    static BlockPrefabsList blockData;
+    public static BlockPrefabsList BlockData
+    {
+        get
         {
-            return;
+            return blockData;
         }
-
-        if (!Pools.ContainsKey(type))
+        set
         {
-            Pools[type] = new Queue<Block>();
+            Debug.Log($"블록 데이터 개수 : {value.Length}");
+            Pools = new Queue<Block>[value.Length];
+            for(int i = 2; i < value.Length; i++)
+            {
+                Pools[i] = new();
+            }
+            blockData = value;
         }
-
-        Pools[type].Enqueue(item);
     }
 
     // 제네릭 타입 가져오기
-    public static Block GetBlock<T>() where T : Block
+    public static Block GetBlock(int blockType)
     {
-        Type type = typeof(T);
-        //가져오려는 타입의 블록을 저장한 Queue가 존재한다면...
-        if (Pools.TryGetValue(type, out Queue<Block> qBlock) && qBlock.Count > 0)
+        //TODO:뭔가 이상한데?
+        blockType = Mathf.Clamp(blockType, 2, BlockData.Length - 1);
+
+        Queue<Block> qBlock = Pools[blockType];
+        
+        if (qBlock.Count > 0)
         {
-            return (T)qBlock.Dequeue();
+            return qBlock.Dequeue();
         }
-        //Queue가 존재하지 않다면
         else
         {
-            if (Blocks.TryGetValue(type, out Block instance))
-            {
-                Block block = GameObject.Instantiate(instance);
-                return (T)block;
-            }
+            Block block = GameObject.Instantiate(BlockData[blockType]).GetComponent<Block>();
+            block.myQueueNumber = blockType;
+            return block;
         }
-        throw new InvalidOperationException($"No items of type {type} found.");
     }
 }
