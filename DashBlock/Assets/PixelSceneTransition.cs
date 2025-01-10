@@ -13,6 +13,8 @@ public class PixelSceneTransition : MonoBehaviour
     private float pixelateSizeMin = 1;
 
     public Image image;
+    
+    //public RawImage image;
     public Material screenMaterial;
 
     void Start()
