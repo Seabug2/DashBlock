@@ -4,6 +4,11 @@ using UnityEngine;
 
 public class FixBlock : Block
 {
+    public override int MinimunRange()
+    {
+        return 0;
+    }
+
     public override bool CanBeDestroyed(sbyte damage = 1)
     {
         BlockManager.Tiles.Remove(Position);
@@ -16,18 +21,28 @@ public class FixBlock : Block
 
         if (HitBlock != null && HitBlock is ActionBlock actionblock)
         {
-            actionblock.OnStartedMove += BlockOut;
+            actionblock.OnStartedMove += () =>
+            {
+                ReleaseBlock();
+                actionblock.OnStartedMove -= ReleaseBlock;
+            };
         }
     }
 
-    void BlockOut()
+    void ReleaseBlock()
     {
+        if (BlockManager.Tiles.ContainsValue(this))
+        {
+            return;
+        }
+
         if (BlockManager.Tiles.TryAdd(Position, this))
         {
             Punching();
         }
         else
         {
+            Debug.Log("FIx ºí·Ï ¹º°¡ Àß¸øµÊ");
             OnBlockDestroyed();
         }
     }

@@ -45,7 +45,7 @@ public struct BlockPosition
     // GetHashCode 재정의 (해시 코드 생성)
     public override int GetHashCode()
     {
-        return (x, y).GetHashCode();
+        return System.HashCode.Combine(x, y);
     }
 
     // ToString 재정의 (디버깅 편의)
@@ -69,12 +69,17 @@ public struct BlockPosition
 
 public class Block : MonoBehaviour
 {
+    public static int id;
+
     TextMeshPro tmp;
     protected TextMeshPro TMP => tmp ??= GetComponentInChildren<TextMeshPro>(true);
 
     public BlockPosition Position => new (transform.position);
 
     sbyte hp;
+    /// <summary>
+    /// 데미지를 받아 hp가 0이 되면 객체는 파괴된다.
+    /// </summary>
     public sbyte HP
     {
         get
@@ -102,6 +107,11 @@ public class Block : MonoBehaviour
     public virtual bool CanBeDestroyed(sbyte damage = 1)
     {
         return HP <= damage;
+    }
+
+    public virtual int MinimunRange()
+    {
+        return 1;
     }
 
     public virtual void TakeDamage(sbyte damage = 1, Block HitBlock = null)

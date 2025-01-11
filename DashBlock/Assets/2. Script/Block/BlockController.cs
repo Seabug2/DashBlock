@@ -1,10 +1,5 @@
 using UnityEngine;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
-using UnityEditor;
 
 public class BlockController : Singleton
 {

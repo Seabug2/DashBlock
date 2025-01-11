@@ -69,8 +69,6 @@ public static class BlockManager
         remainCount = 0;
     }
 
-
-
     /// <summary>
     /// 생성한 블록을 저장할 Pool
     /// </summary>
@@ -95,7 +93,7 @@ public static class BlockManager
         {
             Debug.Log($"블록 데이터 개수 : {value.Length}");
             Pools = new Queue<Block>[value.Length];
-            for(int i = 2; i < value.Length; i++)
+            for (int i = 2; i < value.Length; i++)
             {
                 Pools[i] = new();
             }
@@ -110,7 +108,7 @@ public static class BlockManager
         blockType = Mathf.Clamp(blockType, 2, BlockData.Length - 1);
 
         Queue<Block> qBlock = Pools[blockType];
-        
+
         if (qBlock.Count > 0)
         {
             return qBlock.Dequeue();

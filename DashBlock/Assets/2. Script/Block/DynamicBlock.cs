@@ -22,11 +22,11 @@ public class DynamicBlock : ActionBlock
                 CheckLine(new BlockPosition(0, y));
             }
 
-            BlockManager.Tiles.TryAdd(Position , this);
             return;
         }
 
         base.TakeDamage(damage);
+        BlockManager.Tiles.TryAdd(Position, this);
     }
 
     public override void Dash(Vector2 targetPosition, Block target)
