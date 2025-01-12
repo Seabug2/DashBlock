@@ -14,10 +14,10 @@ public class ActionBlock : Block
 
 
 
-    public void CheckLine(BlockPosition dir)
+    public void CheckLine(Vector2Int dir)
     {
-        BlockPosition targetPos = Position;
-        BlockPosition nextPosition;
+        Vector2Int targetPos = Position;
+        Vector2Int nextPosition;
         int moveDistance = 0;
         Block hitBlock = null;
 

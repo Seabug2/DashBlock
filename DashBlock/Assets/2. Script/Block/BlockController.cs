@@ -11,19 +11,19 @@ public class BlockController : Singleton
 
         if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
         {
-            PlayerBlock.CheckLine(new BlockPosition(0, 1));
+            PlayerBlock.CheckLine(new Vector2Int(0, 1));
         }
         else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
         {
-            PlayerBlock.CheckLine(new BlockPosition(1, 0));
+            PlayerBlock.CheckLine(new Vector2Int(1, 0));
         }
         else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            PlayerBlock.CheckLine(new BlockPosition(-1, 0));
+            PlayerBlock.CheckLine(new Vector2Int(-1, 0));
         }
         else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
         {
-            PlayerBlock.CheckLine(new BlockPosition(0, -1));
+            PlayerBlock.CheckLine(new Vector2Int(0, -1));
         }
 
 #if UNITY_IOS || UNITY_ANDROID
@@ -72,12 +72,12 @@ public class BlockController : Singleton
         if (Mathf.Abs(swipeVector.x) > Mathf.Abs(swipeVector.y))
         {
             sbyte x = swipeVector.x > 0 ? (sbyte)1 : (sbyte)-1;
-            PlayerBlock.CheckLine(new BlockPosition(x, 0));
+            PlayerBlock.CheckLine(new Vector2Int(x, 0));
         }
         else
         {
             sbyte y = swipeVector.y > 0 ? (sbyte)1 : (sbyte)-1;
-            PlayerBlock.CheckLine(new BlockPosition(0, y));
+            PlayerBlock.CheckLine(new Vector2Int(0, y));
         }
     }
 }

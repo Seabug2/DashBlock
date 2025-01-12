@@ -77,14 +77,15 @@ public static class MapLoader
 
 
 
+
         if (string.IsNullOrWhiteSpace(mapData))
         {
             Debug.LogError("Map data is empty.");
             return;
         }
 
-        string[] lines = mapData.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-        sbyte limitY = (sbyte)lines.Length;
+        string[] lines = mapData.Split('\n');
+        int limitY = lines.Length;
 
         if (limitY > MaxLimit)
         {
@@ -93,7 +94,7 @@ public static class MapLoader
         }
 
         string[] firstLineNumbers = lines[0].Split(',');
-        sbyte limitX = (sbyte)firstLineNumbers.Length;
+        int limitX = firstLineNumbers.Length;
 
         if (limitX > MaxLimit)
         {
@@ -104,32 +105,31 @@ public static class MapLoader
         CameraController.SetPosition(limitX, limitY);
 
         BlockManager.ResetGame();
-        BlockManager.limit_x = (sbyte)(limitX - 1);
-        BlockManager.limit_y = (sbyte)(limitY - 1);
+        BlockManager.limit_x = (limitX - 1);
+        BlockManager.limit_y = (limitY - 1);
+
+        Debug.Log($"Map Size {BlockManager.limit_x } / {BlockManager.limit_y    }");
 
         string[] datas;
         char blockType;
 
-        for (sbyte y = 0; y < limitY; y++)
+        for (int y = 0; y < limitY; y++)
         {
             datas = lines[y].Split(',');
-            for (sbyte x = 0; x < limitX; x++)
+            for (int x = 0; x < limitX; x++)
             {
                 //저장된 데이터가 없는 경우
-                if (string.IsNullOrEmpty(datas[x]))
+                if (string.IsNullOrWhiteSpace(datas[x]) || datas[x].Length < 3)
                 {
                     continue;
                 }
 
-
-
-
                 blockType = datas[x][0];
-                Debug.Log($"생성하려는 타입 ID = {blockType}");
+                //Debug.Log($"생성하려는 타입 ID = {blockType}");
 
                 string hp = datas[x].Substring(1);
 
-                if (!sbyte.TryParse(hp, out sbyte HP) || HP == 0)
+                if (!int.TryParse(hp, out int HP))
                 {
                     Debug.LogWarning($"Invalid number at ({x}, {y}): '{datas[x]}'. Skipping.");
                     continue;
@@ -138,7 +138,7 @@ public static class MapLoader
 
 
 
-                Vector3 position = new(x, (sbyte)(limitY - y - 1));
+                Vector2 position = new(x, (limitY - y - 1));
 
                 if (blockType == '1')
                 {
@@ -157,10 +157,10 @@ public static class MapLoader
         OnCompletedLoadMap?.Invoke();
     }
 
-    private static void SetBlock(char blockType, sbyte hp, Vector3 position)
+    private static void SetBlock(char blockType, int hp, Vector3 position)
     {
         Block block = BlockManager.GetBlock(blockType - '0');
-        Debug.Log((int)blockType);
+        //Debug.Log((int)blockType);
         block.Init(position, hp);
     }
 }

@@ -10,12 +10,12 @@ public class ConcreteBlock : Block
         TMP.gameObject.SetActive(false);
     }
 
-    public override bool CanBeDestroyed(sbyte damage = 1)
+    public override bool CanBeDestroyed(int damage = 1)
     {
         return false;
     }
 
-    public override void TakeDamage(sbyte damage = 1, Block HitBlock = null)
+    public override void TakeDamage(int damage = 1, Block HitBlock = null)
     {
         Punching();
     }

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class EnergyBlock : Block
 {
-    public override void TakeDamage(sbyte damage = 1, Block HitBlock = null)
+    public override void TakeDamage(int damage = 1, Block HitBlock = null)
     {
         if (HitBlock != null)
         {

@@ -1,86 +1,29 @@
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
-public struct BlockPosition
-{
-    public sbyte x, y;
-    public BlockPosition(sbyte x, sbyte y)
-    {
-        this.x = x;
-        this.y = y;
-    }
-
-    public BlockPosition(Vector2 position)
-    {
-        x = (sbyte)Mathf.RoundToInt(position.x);
-        y = (sbyte)Mathf.RoundToInt(position.y);
-    }
-
-    public BlockPosition(Vector3 position)
-    {
-        x = (sbyte)Mathf.RoundToInt(position.x);
-        y = (sbyte)Mathf.RoundToInt(position.y);
-    }
-
-    public static BlockPosition operator +(BlockPosition a, BlockPosition b)
-    {
-        return new BlockPosition((sbyte)(a.x + b.x), (sbyte)(a.y + b.y));
-    }
-
-    public static BlockPosition operator -(BlockPosition a, BlockPosition b)
-    {
-        return new BlockPosition((sbyte)(a.x - b.x), (sbyte)(a.y - b.y));
-    }
-
-    // Equals 재정의 (값 비교)
-    public override bool Equals(object obj)
-    {
-        if (obj is BlockPosition other)
-        {
-            return this.x == other.x && this.y == other.y;
-        }
-        return false;
-    }
-
-    // GetHashCode 재정의 (해시 코드 생성)
-    public override int GetHashCode()
-    {
-        return System.HashCode.Combine(x, y);
-    }
-
-    // ToString 재정의 (디버깅 편의)
-    public override string ToString()
-    {
-        return $"({x}, {y})";
-    }
-
-    // BlockPosition -> Vector2 (암묵적 변환)
-    public static implicit operator Vector2(BlockPosition pos)
-    {
-        return new Vector2(pos.x, pos.y);
-    }
-
-    // BlockPosition -> Vector2 (암묵적 변환)
-    public static implicit operator Vector3(BlockPosition pos)
-    {
-        return new Vector3(pos.x, pos.y, 0);
-    }
-}
 
 public class Block : MonoBehaviour
 {
-    public static int id;
+    public int MyQueueNumber;
 
     TextMeshPro tmp;
     protected TextMeshPro TMP => tmp ??= GetComponentInChildren<TextMeshPro>(true);
 
-    public BlockPosition Position => new (transform.position);
+    public Vector2Int Position
+    {
+        get
+        {
+            int x = Mathf.RoundToInt(transform.position.x);
+            int y= Mathf.RoundToInt(transform.position.y);
+            return new(x, y);
+        }
+    }
 
-    sbyte hp;
+    int hp;
     /// <summary>
     /// 데미지를 받아 hp가 0이 되면 객체는 파괴된다.
     /// </summary>
-    public sbyte HP
+    public int HP
     {
         get
         {
@@ -104,7 +47,7 @@ public class Block : MonoBehaviour
     /// <summary>
     /// 블록의 현재 HP가 받을 데미지 이하라면 파괴될 것
     /// </summary>
-    public virtual bool CanBeDestroyed(sbyte damage = 1)
+    public virtual bool CanBeDestroyed(int damage = 1)
     {
         return HP <= damage;
     }
@@ -114,17 +57,12 @@ public class Block : MonoBehaviour
         return 1;
     }
 
-    public virtual void TakeDamage(sbyte damage = 1, Block HitBlock = null)
+    public virtual void TakeDamage(int damage = 1, Block HitBlock = null)
     {
         HP -= damage;
     }
 
-
-
-
-    public int myQueueNumber;
-
-    public virtual void Init(Vector3 position, sbyte hp)
+    public virtual void Init(Vector3 position, int hp)
     {
         transform.position = position;
         HP = hp;
@@ -132,7 +70,7 @@ public class Block : MonoBehaviour
 
         if (!BlockManager.Tiles.TryAdd(Position, this))
         {
-            BlockManager.Enqueue(myQueueNumber, this);
+            BlockManager.Enqueue(MyQueueNumber, this);
             return;
         }
     }
@@ -148,7 +86,7 @@ public class Block : MonoBehaviour
 
         BlockManager.RemainCount--;
         //pull에 자신을 되돌리는 코드
-        BlockManager.Enqueue(myQueueNumber, this);
+        BlockManager.Enqueue(MyQueueNumber, this);
     }
 
     public void Punching()

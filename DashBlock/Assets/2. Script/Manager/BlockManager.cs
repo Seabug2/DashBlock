@@ -32,20 +32,23 @@ public static class BlockManager
 
 
 
-    public static sbyte limit_x;
-    public static sbyte limit_y;
+    public static int limit_x;
+    public static int limit_y;
 
-    public static readonly Dictionary<BlockPosition, Block> Tiles = new();
+    /// <summary>
+    /// 위치를 기반으로 Block들을 Tile Map으로 관리
+    /// </summary>
+    public static readonly Dictionary<Vector2Int, Block> Tiles = new();
 
     // 모든 블록이 제거된 후 호출될 이벤트
     public static event Action OnCompleteAction;
 
-    static sbyte remainCount = 0;
+    static int remainCount = 0;
 
     /// <summary>
     /// 0을 할당하려면 remainCount을 사용하시오
     /// </summary>
-    public static sbyte RemainCount
+    public static int RemainCount
     {
         get
         {
@@ -116,7 +119,7 @@ public static class BlockManager
         else
         {
             Block block = GameObject.Instantiate(BlockData[blockType]).GetComponent<Block>();
-            block.myQueueNumber = blockType;
+            block.MyQueueNumber = blockType;
             return block;
         }
     }

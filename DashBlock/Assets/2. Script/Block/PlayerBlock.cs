@@ -27,7 +27,7 @@ public class PlayerBlock : ActionBlock
         }
     }
 
-    public override void Init(Vector3 position, sbyte hp)
+    public override void Init(Vector3 position, int hp)
     {
         transform.position = position;
         HP = hp;

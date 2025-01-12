@@ -9,13 +9,13 @@ public class FixBlock : Block
         return 0;
     }
 
-    public override bool CanBeDestroyed(sbyte damage = 1)
+    public override bool CanBeDestroyed(int damage = 1)
     {
         BlockManager.Tiles.Remove(Position);
         return true;
     }
 
-    public override void TakeDamage(sbyte damage = 1, Block HitBlock = null)
+    public override void TakeDamage(int damage = 1, Block HitBlock = null)
     {
         Punching();
 
