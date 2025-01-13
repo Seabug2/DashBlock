@@ -10,9 +10,9 @@ public class ConcreteBlock : Block
         TMP.gameObject.SetActive(false);
     }
 
-    public override Vector2Int CollisionPosition(Block hitBlock ,Vector2Int collisionDir, int hitDistance)
+    public override bool IsClear(Block hitBlock, Vector2Int collisionDirection, int movementDistance)
     {
-        return Position - collisionDir;
+        return false;
     }
 
     public override void TakeDamage(Block HitBlock = null)

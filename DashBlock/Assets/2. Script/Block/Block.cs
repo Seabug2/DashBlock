@@ -28,11 +28,11 @@ public class Block : MonoBehaviour
         }
     }
 
+
+
+
     //사용을 마친 블록을 관리하는 Pooling용 Queue 배열
     protected static Queue<Block>[] Pools;
-
-
-
 
     //가져오기
     public static Block GetBlock(int i)
@@ -60,9 +60,6 @@ public class Block : MonoBehaviour
         return GetBlock(i);
     }
 
-
-
-
     //집어넣기
     protected void Return()
     {
@@ -71,7 +68,13 @@ public class Block : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    public static void @Reset()
+
+
+
+    //생성된 블록을 타일맵으로 관리하는 Dictionary
+    public static readonly Dictionary<Vector2Int, Block> TileMap = new();
+    public static int BlockCount = 0;
+    public static void ResetTileMap()
     {
         //TODO : 남아있는 생성 블록을 다시 Pool에 넣는다.
         foreach (Block b in TileMap.Values)
@@ -82,11 +85,6 @@ public class Block : MonoBehaviour
         TileMap.Clear();
         BlockCount = 0;
     }
-
-
-    //생성된 블록을 타일맵으로 관리하는 Dictionary
-    public static readonly Dictionary<Vector2Int, Block> TileMap = new();
-    public static int BlockCount = 0;
 
     public static int limit_x;
     public static int limit_y;
@@ -132,11 +130,6 @@ public class Block : MonoBehaviour
         }
     }
 
-    public virtual int MinimunRange()
-    {
-        return 1;
-    }
-
     public virtual void TakeDamage(Block HitBlock = null)
     {
         HP--;
@@ -155,10 +148,20 @@ public class Block : MonoBehaviour
         }
     }
 
-    public virtual Vector2Int CollisionPosition(Block hitBlock, Vector2Int collisionDir, int hitDistance)
+    /// <summary>
+    /// 특정 거리를 움직인 Block과 부딪힌 결과,
+    /// 자신이 Clear 되었는지 유무를 반환
+    /// </summary>
+    public virtual bool IsClear(Block hitBlock, Vector2Int collisionDirection, int movementDistance)
     {
-        return HP > 1 ? Position + collisionDir : Position;
+        //충돌거리가 1보다 작으면 이동 못함
+        if (movementDistance < 1)
+            return false;
+
+        //HP가 1 이하라면 이 블록의 위치까지 이동한다.
+        return HP == 1;
     }
+
 
     protected virtual void OnBlockDestroyed()
     {
@@ -167,10 +170,34 @@ public class Block : MonoBehaviour
         Return();
     }
 
+
+
+
     public void Punching()
     {
         transform.DOKill();
         transform.localScale = Vector3.one;
         transform.DOPunchScale(Vector3.one, .3f, 20).OnComplete(() => transform.localScale = Vector3.one);
+    }
+
+    public static int DashDistance(Vector2Int distance)
+    {
+        return Mathf.RoundToInt(distance.magnitude);
+    }
+
+    public static Vector2Int GetDir(Block targetBlock, Block movingBlock)
+    {
+        Vector3 dir = targetBlock.transform.position - movingBlock.transform.position;
+
+        if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
+        {
+            int x = dir.x > 0 ? 1 : -1;
+            return new Vector2Int(x, 0);
+        }
+        else
+        {
+            int y = dir.y > 0 ? 1 : -1;
+            return new Vector2Int(0, y);
+        }
     }
 }

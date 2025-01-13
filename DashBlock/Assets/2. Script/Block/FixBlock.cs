@@ -6,16 +6,12 @@ public class FixBlock : Block
 {
     ActionBlock FixedBlock;
 
-    //FixBlock과 부딪히면 이 블록의 위치까지 오게 된다. 
-    public override Vector2Int CollisionPosition(Block hitBlock, Vector2Int collisionDir, int hitDistance)
+    public override bool IsClear(Block hitBlock, Vector2Int collisionDirection, int movementDistance)
     {
-        if (FixedBlock.CheckLine(collisionDir, out Vector2Int _, out Block _))
-        {
-            return Position - collisionDir;
-        }
+        if (FixedBlock == null)
+            return true;
 
-        TileMap.Remove(Position);
-        return Position;
+        return FixedBlock.IsClear(hitBlock, collisionDirection, movementDistance);
     }
 
     public override void TakeDamage(Block HitBlock = null)
@@ -24,29 +20,12 @@ public class FixBlock : Block
 
         if (HitBlock != null && HitBlock is ActionBlock actionBlock)
         {
-        }
-    }
+            FixedBlock = actionBlock;
 
-    void ReleaseBlock()
-    {
-        //이 블록이 되돌아가려고 하는데,
-        //그 자리에 이미 블록이 존재한다?
-        if (!TileMap.TryAdd(Position, this))
-        {
-            if (TileMap.TryGetValue(Position, out Block nextBlock) && nextBlock is ActionBlock actionBlock)
+            FixedBlock.OnDashedEvent += () =>
             {
-                
-            }
+                FixedBlock = null;
+            };
         }
-
-        //if (TileMap.TryAdd(Position, this))
-        //{
-        //    Punching();
-        //}
-        //else
-        //{
-        //    Debug.Log("FIx 블록 뭔가 잘못됨");
-        //    Return();
-        //}
     }
 }

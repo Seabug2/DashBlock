@@ -24,51 +24,7 @@ public class ActionBlock : Block
         }
     }
 
-
-    public Vector2Int Dir { get; private set; }
-
-    public bool CheckLine(Vector2Int Dir, out Vector2Int targetPosition, out Block hitBlock)
-    {
-        this.Dir = Dir;
-        targetPosition = Position;
-        hitBlock = null;
-
-        Vector2Int nextPosition;
-        int moveDistance = 0;
-
-        while (true)
-        {
-            nextPosition = targetPosition + Dir;
-
-            //벽이나
-            if (nextPosition.x < 0 || nextPosition.x > limit_x
-                || nextPosition.y < 0 || nextPosition.y > limit_y)
-            {
-                break;
-            }
-
-            //블록에 부딪힌다면 검사를 마친다.
-            if (TileMap.TryGetValue(nextPosition, out hitBlock))
-            {
-                //부딪힌 상대 블록에게 충돌 방향과 충돌한 거리를 주고
-                //위치를 반환 받는다.
-                targetPosition = hitBlock.CollisionPosition(this, Dir, moveDistance);
-                break;
-            }
-
-            targetPosition = nextPosition;
-            moveDistance++;
-        }
-
-        if (Position.Equals(targetPosition))
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
+    public event Action OnDashedEvent;
 
     /// <summary>
     /// 벽돌에 부딪히는 경우
@@ -79,6 +35,9 @@ public class ActionBlock : Block
         {
             TileMap.Remove(Position);
             IsMoving = true;
+
+            OnDashedEvent?.Invoke();
+            OnDashedEvent = null;
 
             transform
                 .DOMove(new Vector3(targetPosition.x, targetPosition.y, 0), .1f)
@@ -94,6 +53,67 @@ public class ActionBlock : Block
         {
             OnFailedMove();
         }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="Dir">이동 방향</param>
+    /// <param name="targetPosition">이동할 목적지</param>
+    /// <param name="hitBlock">부딪히는 블록</param>
+    /// <returns></returns>
+    public bool CheckLine(Vector2Int Dir, out Vector2Int targetPosition, out Block hitBlock)
+    {
+        targetPosition = Position;
+        hitBlock = null;
+
+        Vector2Int nextPosition;
+        int movementDistance = 0;
+        while (true)
+        {
+            nextPosition = targetPosition + Dir;
+
+            //벽에 부딪힌다면 검사를 마친다.
+            if (nextPosition.x < 0 || nextPosition.x > limit_x
+                || nextPosition.y < 0 || nextPosition.y > limit_y)
+            {
+                break;
+            }
+
+            //블록에 부딪힌다면 검사를 마친다.
+            if (TileMap.TryGetValue(nextPosition, out hitBlock))
+            {
+                break;
+            }
+
+            movementDistance++;
+            targetPosition = nextPosition;
+        }
+
+        //부딪힌 블록이 없으면(벽에 부딪힌 것)
+        if (hitBlock == null)
+        {
+            //이동한 거리에 따라 이동 가능 유무 반환
+            //벽에 부딪혔을 때 이동한 거리가 1보다 작으면 이동 실패한 것 = false
+            return movementDistance > 0;
+        }
+        else
+        {
+            //부딪힌 블록이 존재한 경우...
+            bool moveable = hitBlock.IsClear(this, Dir, movementDistance);
+            targetPosition = moveable ? nextPosition : targetPosition;
+            return moveable;
+        }
+    }
+
+    public override bool IsClear(Block hitBlock, Vector2Int collisionDirection, int movementDistance)
+    {
+        //부딪힌 거리가 1 아래면 밀리지 않는다.
+        if (movementDistance < 1)
+            return false;
+
+        //부딪힌 거리가 1 이상일 때,
+        return CheckLine(collisionDirection, out Vector2Int _, out Block _);
     }
 
     public virtual void OnFailedMove()

@@ -104,7 +104,7 @@ public static class MapLoader
 
         CameraController.SetPosition(limitX, limitY);
 
-        Block.@Reset();
+        Block.ResetTileMap();
         Block.limit_x = (limitX - 1);
         Block.limit_y = (limitY - 1);
 
@@ -157,10 +157,16 @@ public static class MapLoader
         OnCompletedLoadMap?.Invoke();
     }
 
-    private static void SetBlock(char blockType, int hp, Vector3 position)
+    private static void SetBlock(char blockType, int hp, Vector2 position)
     {
-        Block block = Block.GetBlock(blockType - '0');
-        //Debug.Log((int)blockType);
+        int i = blockType - '0';
+        Block block = Block.GetBlock(i);
+
+        if (i == 1)
+        {
+            Block.BlockCount++;
+        }
+
         block.Init(position, hp);
     }
 }
