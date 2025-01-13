@@ -10116,9 +10116,9 @@ GameObject:
   - component: {fileID: 2166998104113280755}
   - component: {fileID: 4325699177183579738}
   - component: {fileID: 2044867669880251878}
-  - component: {fileID: 7621537297511848477}
+  - component: {fileID: 2681775950643006856}
   m_Layer: 0
-  m_Name: PlayerBlock
+  m_Name: DashBlock
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10208,7 +10208,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   minSwipeDistance: 50
---- !u!114 &7621537297511848477
+--- !u!114 &2681775950643006856
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -10217,11 +10217,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 9017398734975385084}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b2a6aa3525b6ebf4d8b730545dda89d3, type: 3}
+  m_Script: {fileID: 11500000, guid: a364862319d105c49b3da9fde81ced98, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wiggle: {fileID: 0}
-  dash: {fileID: 0}
-  IsMoving: 0
-  bronkenPrtc: {fileID: 0}
-  colisionPrtc: {fileID: 0}

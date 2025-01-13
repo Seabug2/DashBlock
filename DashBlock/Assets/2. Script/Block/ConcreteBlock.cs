@@ -10,12 +10,12 @@ public class ConcreteBlock : Block
         TMP.gameObject.SetActive(false);
     }
 
-    public override bool CanBeDestroyed(int damage = 1)
+    public override Vector2Int CollisionPosition(Block hitBlock ,Vector2Int collisionDir, int hitDistance)
     {
-        return false;
+        return Position - collisionDir;
     }
 
-    public override void TakeDamage(int damage = 1, Block HitBlock = null)
+    public override void TakeDamage(Block HitBlock = null)
     {
         Punching();
     }

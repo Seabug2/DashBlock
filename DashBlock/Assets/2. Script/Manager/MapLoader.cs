@@ -3,32 +3,32 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Networking;
 
-public class SheatData
-{
-    //"gid" / "맵 이름"
-    public string Gid { get; private set; }
-    public string MapName { get; private set; }
-
-    public SheatData(string line)
-    {
-        string[] data = line.Split(',');
-        Gid = data[1];
-        MapName = data[2];
-    }
-}
-
 public static class MapLoader
 {
     private const sbyte MaxLimit = 127;
 
     const string url = "https://docs.google.com/spreadsheets/d/194NAzYpdn938JB_HMUGmefgy66cs3sOhxcl2iUnOAms/export?format=csv";
 
+    public class SheatData
+    {
+        //"gid" / "맵 이름"
+        public string Gid { get; private set; }
+        public string MapName { get; private set; }
+
+        public SheatData(string line)
+        {
+            string[] data = line.Split(',');
+            Gid = data[1];
+            MapName = data[2];
+        }
+    }
+
     public static SheatData[] SheatDatas;
     static string titleMapData;
 
     public async static UniTaskVoid Init()
     {
-        BlockManager.BlockData = Resources.Load<BlockPrefabsList>("Block_List");
+        //BlockManager.BlockData = Resources.Load<BlockPrefabsList>("Block_List");
 
 
         string datas = await SheetRequest("0");
@@ -104,11 +104,11 @@ public static class MapLoader
 
         CameraController.SetPosition(limitX, limitY);
 
-        BlockManager.ResetGame();
-        BlockManager.limit_x = (limitX - 1);
-        BlockManager.limit_y = (limitY - 1);
+        Block.@Reset();
+        Block.limit_x = (limitX - 1);
+        Block.limit_y = (limitY - 1);
 
-        Debug.Log($"Map Size {BlockManager.limit_x } / {BlockManager.limit_y    }");
+        Debug.Log($"Map Size {Block.limit_x } / {Block.limit_y    }");
 
         string[] datas;
         char blockType;
@@ -142,7 +142,7 @@ public static class MapLoader
 
                 if (blockType == '1')
                 {
-                    BlockManager.PlayerBlock.Init(position, HP);
+                    DashBlock.Player.Init(position, 99);
                 }
                 else
                 {
@@ -159,7 +159,7 @@ public static class MapLoader
 
     private static void SetBlock(char blockType, int hp, Vector3 position)
     {
-        Block block = BlockManager.GetBlock(blockType - '0');
+        Block block = Block.GetBlock(blockType - '0');
         //Debug.Log((int)blockType);
         block.Init(position, hp);
     }

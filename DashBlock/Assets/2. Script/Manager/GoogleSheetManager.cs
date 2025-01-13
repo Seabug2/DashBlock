@@ -34,7 +34,7 @@ public class GoogleSheetManager : MonoBehaviour
         yield return www.SendWebRequest();
 
         mapData = www.downloadHandler.text;
-        MapLoader.LoadMap(mapData);
+        //MapLoader.LoadMap(mapData);
         
         
     }

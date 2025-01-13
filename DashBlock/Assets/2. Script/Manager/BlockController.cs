@@ -3,27 +3,25 @@ using UnityEngine.InputSystem;
 
 public class BlockController : Singleton
 {
-    PlayerBlock PlayerBlock => BlockManager.PlayerBlock;
-
     void Update()
     {
-        if (ActionBlock.IsMoving) return;
+        if (DashBlock.Player.IsMoving) return;
 
         if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
         {
-            PlayerBlock.CheckLine(new Vector2Int(0, 1));
+            DashBlock.Player.Dash(new Vector2Int(0, 1));
         }
         else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
         {
-            PlayerBlock.CheckLine(new Vector2Int(1, 0));
+            DashBlock.Player.Dash(new Vector2Int(1, 0));
         }
         else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            PlayerBlock.CheckLine(new Vector2Int(-1, 0));
+            DashBlock.Player.Dash(new Vector2Int(-1, 0));
         }
         else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
         {
-            PlayerBlock.CheckLine(new Vector2Int(0, -1));
+            DashBlock.Player.Dash(new Vector2Int(0, -1));
         }
 
 #if UNITY_IOS || UNITY_ANDROID
@@ -71,13 +69,13 @@ public class BlockController : Singleton
 
         if (Mathf.Abs(swipeVector.x) > Mathf.Abs(swipeVector.y))
         {
-            sbyte x = swipeVector.x > 0 ? (sbyte)1 : (sbyte)-1;
-            PlayerBlock.CheckLine(new Vector2Int(x, 0));
+            int x = swipeVector.x > 0 ? 1 : -1;
+            DashBlock.Player.Dash(new Vector2Int(x, 0));
         }
         else
         {
-            sbyte y = swipeVector.y > 0 ? (sbyte)1 : (sbyte)-1;
-            PlayerBlock.CheckLine(new Vector2Int(0, y));
+            int y = swipeVector.y > 0 ? 1 : -1;
+            DashBlock.Player.Dash(new Vector2Int(0, y));
         }
     }
 }

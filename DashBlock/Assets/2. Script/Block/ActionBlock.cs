@@ -1,89 +1,127 @@
+using System;
+using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
-using System;
 
 public class ActionBlock : Block
 {
-    public static sbyte ActiveMovingBlocks = 0;
+    public static int ActiveMovingBlocks = 0;
 
     /// <summary>
     /// 움직이고 있는 Action Block이 하나라도 있다면 true를 반환
     /// </summary>
-    public static bool IsMoving => ActiveMovingBlocks > 0;
-
-
-
-
-    public void CheckLine(Vector2Int dir)
+    private bool isMoving;
+    public bool IsMoving
     {
-        Vector2Int targetPos = Position;
+        get
+        {
+            return isMoving;
+        }
+        set
+        {
+            isMoving = value;
+            ActiveMovingBlocks += value ? 1 : -1;
+        }
+    }
+
+
+    public Vector2Int Dir { get; private set; }
+
+    public bool CheckLine(Vector2Int Dir, out Vector2Int targetPosition, out Block hitBlock)
+    {
+        this.Dir = Dir;
+        targetPosition = Position;
+        hitBlock = null;
+
         Vector2Int nextPosition;
         int moveDistance = 0;
-        Block hitBlock = null;
 
         while (true)
         {
-            nextPosition = targetPos + dir;
+            nextPosition = targetPosition + Dir;
 
-            if (nextPosition.x < 0 || nextPosition.x > BlockManager.limit_x
-                || nextPosition.y < 0 || nextPosition.y > BlockManager.limit_y)
+            //벽이나
+            if (nextPosition.x < 0 || nextPosition.x > limit_x
+                || nextPosition.y < 0 || nextPosition.y > limit_y)
             {
                 break;
             }
 
-            if (BlockManager.Tiles.TryGetValue(nextPosition, out hitBlock))
+            //블록에 부딪힌다면 검사를 마친다.
+            if (TileMap.TryGetValue(nextPosition, out hitBlock))
             {
+                //부딪힌 상대 블록에게 충돌 방향과 충돌한 거리를 주고
+                //위치를 반환 받는다.
+                targetPosition = hitBlock.CollisionPosition(this, Dir, moveDistance);
                 break;
             }
 
-            targetPos = nextPosition;
+            targetPosition = nextPosition;
             moveDistance++;
         }
 
-        if (hitBlock == null && moveDistance == 0 )
+        if (Position.Equals(targetPosition))
         {
-            OnFailedMove();
-        }
-        else if (hitBlock != null && moveDistance < hitBlock.MinimunRange())
-        {
-            OnFailedMove();
+            return true;
         }
         else
         {
-            Dash(targetPos, hitBlock);
+            return false;
         }
     }
 
     /// <summary>
     /// 벽돌에 부딪히는 경우
     /// </summary>
-    public virtual void Dash(Vector2 targetPosition, Block target)
+    public virtual void Dash(Vector2Int Dir)
     {
-        ActiveMovingBlocks++;
-
-        if (target != null && target.CanBeDestroyed())
+        if (CheckLine(Dir, out Vector2Int targetPosition, out Block hitBlock))
         {
-            targetPosition = target.transform.position;
+            TileMap.Remove(Position);
+            IsMoving = true;
+
+            transform
+                .DOMove(new Vector3(targetPosition.x, targetPosition.y, 0), .1f)
+                .SetEase(Ease.InQuart)
+                .OnComplete(() =>
+                {
+                    TakeDamage(hitBlock);
+                    CameraController.Shake(0.3f, 0.4f);
+                    IsMoving = false;
+                });
         }
-
-        OnStartedMove?.Invoke();
-
-        transform
-            .DOMove(targetPosition, .1f)
-            .SetEase(Ease.InQuart)
-            .OnComplete(() =>
-            {
-                target?.TakeDamage(HitBlock: this);
-
-                CameraController.Shake(0.3f, 0.4f);
-                ActiveMovingBlocks--;
-                TakeDamage();
-            });
+        else
+        {
+            OnFailedMove();
+        }
     }
-
-    public event Action OnStartedMove;
-
 
     public virtual void OnFailedMove()
     { }
+
+    public override void TakeDamage(Block hitBlock = null)
+    {
+        //멈춰있는 중에 데미지를 받았다는 것은 다른 움직이는 물체에 부딪혀서 밀려야 한다는 의미
+        if (!IsMoving && HP > 1)
+        {
+            Vector2 dir = transform.position - DashBlock.Player.transform.position;
+
+            if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
+            {
+                int x = dir.x > 0 ? 1 : -1;
+                Dash(new Vector2Int(x, 0));
+            }
+            else
+            {
+                int y = dir.y > 0 ? 1 : -1;
+                Dash(new Vector2Int(0, y));
+            }
+
+            return;
+        }
+
+        base.TakeDamage();
+        TileMap.TryAdd(Position, this);
+        hitBlock?.TakeDamage(this);
+    }
 }

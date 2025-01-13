@@ -6,6 +6,6 @@ public class TitleSceneManager : MonoBehaviour
 {
     void Start()
     {
-        MapLoader.Init().Forget();
+        //MapLoader.Init().Forget();
     }
 }
