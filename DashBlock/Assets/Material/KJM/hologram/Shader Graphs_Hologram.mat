@@ -42,9 +42,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Frequency: 0.06
-    - _InputTime: -122.57
-    - _LineStrength: 0.1
+    - _Alpha: 0
+    - _Frequency: 0
+    - _InputTime: -13.74
+    - _LineStrength: 2.99
     - _QueueControl: 0
     - _QueueOffset: 0
     m_Colors:
