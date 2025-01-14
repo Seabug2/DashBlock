@@ -3,50 +3,45 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Networking;
 
+public class MapData
+{
+    //"gid" / "맵 이름"
+    public string Gid { get; private set; }
+    public string MapName { get; private set; }
+
+    public MapData(string line)
+    {
+        string[] data = line.Split(',');
+        Gid = data[1];
+        MapName = data[2];
+    }
+}
+
 public static class MapLoader
 {
-    private const sbyte MaxLimit = 127;
-
     const string url = "https://docs.google.com/spreadsheets/d/194NAzYpdn938JB_HMUGmefgy66cs3sOhxcl2iUnOAms/export?format=csv";
 
-    public class SheatData
-    {
-        //"gid" / "맵 이름"
-        public string Gid { get; private set; }
-        public string MapName { get; private set; }
-
-        public SheatData(string line)
-        {
-            string[] data = line.Split(',');
-            Gid = data[1];
-            MapName = data[2];
-        }
-    }
-
-    public static SheatData[] SheatDatas;
+    static MapData[] SheatDatas;
+    static MapData currentMap;
     static string titleMapData;
 
     public async static UniTaskVoid Init()
     {
-        //BlockManager.BlockData = Resources.Load<BlockPrefabsList>("Block_List");
-
-
+        //첫 번째 스프레드 시트를 불러오고,
         string datas = await SheetRequest("0");
-        Debug.Log(datas);
 
-        //줄나눔
+        //줄을 나눈 후
         string[] lines = datas.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
 
-        // 타이틀 정보를 저장
-        SheatData sheat = new(lines[1]);
+        //맵 시트에 저장된 첫 번째 타이틀 씬의 정보를 불러옴
+        MapData sheat = new(lines[1]);
         titleMapData = await SheetRequest(sheat.Gid);
-        Debug.Log(titleMapData);
 
 
 
-
-        int mapDataCount = lines.Length - 2; //두 번째 줄까지 제거한 수
-        SheatDatas = new SheatData[mapDataCount];
+        //두 번째 줄까지 제거한 수 (첫 번째 줄은 분류, 두 번째 줄은 타이틀 씬의 정보)
+        int mapDataCount = lines.Length - 2;
+        SheatDatas = new MapData[mapDataCount];
         //맵 데이터를 저장
         for (int i = 2; i < mapDataCount + 2; i++)
         {
@@ -87,20 +82,8 @@ public static class MapLoader
         string[] lines = mapData.Split('\n');
         int limitY = lines.Length;
 
-        if (limitY > MaxLimit)
-        {
-            Debug.LogError($"Map height exceeds sbyte limits ({MaxLimit}).");
-            return;
-        }
-
         string[] firstLineNumbers = lines[0].Split(',');
         int limitX = firstLineNumbers.Length;
-
-        if (limitX > MaxLimit)
-        {
-            Debug.LogError($"Map width exceeds sbyte limits ({MaxLimit}).");
-            return;
-        }
 
         CameraController.SetPosition(limitX, limitY);
 
@@ -108,65 +91,50 @@ public static class MapLoader
         Block.limit_x = (limitX - 1);
         Block.limit_y = (limitY - 1);
 
-        Debug.Log($"Map Size {Block.limit_x } / {Block.limit_y    }");
+        Debug.Log($"Map Size {Block.limit_x} / {Block.limit_y}");
 
-        string[] datas;
-        char blockType;
 
+
+
+        string[] line;
         for (int y = 0; y < limitY; y++)
         {
-            datas = lines[y].Split(',');
+            line = lines[y].Split(',');
             for (int x = 0; x < limitX; x++)
             {
                 //저장된 데이터가 없는 경우
-                if (string.IsNullOrWhiteSpace(datas[x]) || datas[x].Length < 3)
+                if (string.IsNullOrWhiteSpace(line[x]) || line[x].Length != 3)
                 {
                     continue;
                 }
 
-                blockType = datas[x][0];
-                //Debug.Log($"생성하려는 타입 ID = {blockType}");
-
-                string hp = datas[x].Substring(1);
-
-                if (!int.TryParse(hp, out int HP))
-                {
-                    Debug.LogWarning($"Invalid number at ({x}, {y}): '{datas[x]}'. Skipping.");
-                    continue;
-                }
-
-
-
-
-                Vector2 position = new(x, (limitY - y - 1));
-
-                if (blockType == '1')
-                {
-                    DashBlock.Player.Init(position, 99);
-                }
-                else
-                {
-                    SetBlock(blockType, HP, position);
-                }
+                SetTile(line[x], new Vector2(x, limitY - y - 1));
             }
         }
-
-
 
         ActionBlock.ActiveMovingBlocks = 0;
         OnCompletedLoadMap?.Invoke();
     }
 
-    private static void SetBlock(char blockType, int hp, Vector2 position)
+    private static void SetTile(string tileData, Vector2 position)
     {
-        int i = blockType - '0';
+        int blockType = tileData[0] - 'A';
+        string hp = tileData.Substring(1);
+
+        if (!int.TryParse(hp, out int HP))
+        {
+            HP = 1;
+        }
+
+        int i = blockType - 'A';
         Block block = Block.GetBlock(i);
 
-        if (i == 1)
+        //Block의 B
+        if (blockType == 'B')
         {
             Block.BlockCount++;
         }
 
-        block.Init(position, hp);
+        block.Init(position, HP);
     }
 }

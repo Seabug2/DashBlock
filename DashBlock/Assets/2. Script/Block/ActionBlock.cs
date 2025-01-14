@@ -21,32 +21,53 @@ public class ActionBlock : Block
         {
             isMoving = value;
             ActiveMovingBlocks += value ? 1 : -1;
+            
+            if(ActiveMovingBlocks < 0)
+            {
+                ActiveMovingBlocks = 0;
+            }
+
         }
     }
-
-    public event Action OnDashedEvent;
 
     /// <summary>
     /// 벽돌에 부딪히는 경우
     /// </summary>
     public virtual void Dash(Vector2Int Dir)
     {
+        //Dir 방향으로 이동하였을 때 이동이 가능한가?
+        //가능하다면 어디까지 이동하는지?
+        //그리고 어떤 블록과 부딪히는지?
         if (CheckLine(Dir, out Vector2Int targetPosition, out Block hitBlock))
         {
-            TileMap.Remove(Position);
-            IsMoving = true;
+            //자신이 가진 키값이 타일맵에 존재하며
+            //그 저장된 값이 자신이라면 타일맵에서 제거
+            if (TileMap.TryGetValue(Position, out Block block)
+                && block == this)
+            {
+                TileMap.Remove(Position);
+            }
 
-            OnDashedEvent?.Invoke();
-            OnDashedEvent = null;
+            IsMoving = true;
 
             transform
                 .DOMove(new Vector3(targetPosition.x, targetPosition.y, 0), .1f)
                 .SetEase(Ease.InQuart)
                 .OnComplete(() =>
                 {
+                    if (hitBlock != null)
+                    {
+                        hitBlock.TakeDamage(this);
+                    }
+
                     TakeDamage(hitBlock);
                     CameraController.Shake(0.3f, 0.4f);
                     IsMoving = false;
+
+                    //이동을 마치고,
+                    //현재 위치의 타일맵에 아무 블록도 존재하지 않으면
+                    //자신을 등록
+                    TileMap.TryAdd(Position, this);
                 });
         }
         else
@@ -99,21 +120,31 @@ public class ActionBlock : Block
         }
         else
         {
-            //부딪힌 블록이 존재한 경우...
-            bool moveable = hitBlock.IsClear(this, Dir, movementDistance);
-            targetPosition = moveable ? nextPosition : targetPosition;
-            return moveable;
+            //이동에 실패한 경우
+
+            //이동에 성공한 경우
+            ////////블록 앞까지 이동
+            ////////블록 위치까지 이동
+
+            return hitBlock.IsClear(this, ref targetPosition, movementDistance);
         }
     }
 
-    public override bool IsClear(Block hitBlock, Vector2Int collisionDirection, int movementDistance)
+    public override bool IsClear(Block hitBlock, ref Vector2Int collisionPopsition, int movementDistance)
     {
         //부딪힌 거리가 1 아래면 밀리지 않는다.
         if (movementDistance < 1)
             return false;
 
+        Vector2Int dir = Position - collisionPopsition;
+
         //부딪힌 거리가 1 이상일 때,
-        return CheckLine(collisionDirection, out Vector2Int _, out Block _);
+        bool isCleared = CheckLine(dir, out Vector2Int _, out Block _);
+        if (isCleared)
+        {
+            collisionPopsition = Position;
+        }
+        return true;
     }
 
     public virtual void OnFailedMove()
@@ -124,24 +155,12 @@ public class ActionBlock : Block
         //멈춰있는 중에 데미지를 받았다는 것은 다른 움직이는 물체에 부딪혀서 밀려야 한다는 의미
         if (!IsMoving && HP > 1)
         {
-            Vector2 dir = transform.position - DashBlock.Player.transform.position;
-
-            if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
-            {
-                int x = dir.x > 0 ? 1 : -1;
-                Dash(new Vector2Int(x, 0));
-            }
-            else
-            {
-                int y = dir.y > 0 ? 1 : -1;
-                Dash(new Vector2Int(0, y));
-            }
+            Vector2Int dir = GetDir(this, hitBlock);
+            Dash(dir);
 
             return;
         }
 
         base.TakeDamage();
-        TileMap.TryAdd(Position, this);
-        hitBlock?.TakeDamage(this);
     }
 }

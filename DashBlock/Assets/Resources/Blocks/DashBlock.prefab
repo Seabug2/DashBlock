@@ -10115,7 +10115,6 @@ GameObject:
   m_Component:
   - component: {fileID: 2166998104113280755}
   - component: {fileID: 4325699177183579738}
-  - component: {fileID: 2044867669880251878}
   - component: {fileID: 2681775950643006856}
   m_Layer: 0
   m_Name: DashBlock
@@ -10195,19 +10194,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &2044867669880251878
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9017398734975385084}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 700544a8a424e0e449916fdf6a1cf0f8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  minSwipeDistance: 50
 --- !u!114 &2681775950643006856
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10220,3 +10206,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a364862319d105c49b3da9fde81ced98, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  OnStartedGame:
+    m_PersistentCalls:
+      m_Calls: []
+  OnFailedGame:
+    m_PersistentCalls:
+      m_Calls: []

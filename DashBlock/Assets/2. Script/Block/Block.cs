@@ -14,6 +14,8 @@ public class Block : MonoBehaviour
     [RuntimeInitializeOnLoadMethod]
     static void LoadAllBlock()
     {
+        //리소스 폴더에 있는 블록 프리팹을 전부 로드하고
+        //프리팹 파일 이름 첫 글자의 ASCII 번호를 따서 인덱스로 사용하여 배열에 저장
         Block[] resources = Resources.LoadAll<Block>("Blocks");
         int size = resources.Length;
         Prefabs = new Block[size];
@@ -35,6 +37,12 @@ public class Block : MonoBehaviour
     protected static Queue<Block>[] Pools;
 
     //가져오기
+    public static Block GetBlock(char c)
+    {
+        int i = c - 'A';
+        return GetBlock(i);
+    }
+
     public static Block GetBlock(int i)
     {
         if (i < 0 || i >= Pools.Length)
@@ -149,17 +157,25 @@ public class Block : MonoBehaviour
     }
 
     /// <summary>
-    /// 특정 거리를 움직인 Block과 부딪힌 결과,
-    /// 자신이 Clear 되었는지 유무를 반환
+    /// hitBlock이 movementDistance만큼 이동하여 CollisionPosition에서 현재 Block과 충돌했을 때,
+    /// hitBlock의 이동 유무와 최종 목적지를 반환
     /// </summary>
-    public virtual bool IsClear(Block hitBlock, Vector2Int collisionDirection, int movementDistance)
+    public virtual bool IsClear(Block hitBlock, ref Vector2Int collisionPosition, int movementDistance)
     {
         //충돌거리가 1보다 작으면 이동 못함
         if (movementDistance < 1)
             return false;
 
         //HP가 1 이하라면 이 블록의 위치까지 이동한다.
-        return HP == 1;
+        if (HP == 1)
+        {
+            collisionPosition = Position;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
 

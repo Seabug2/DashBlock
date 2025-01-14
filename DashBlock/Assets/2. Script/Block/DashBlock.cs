@@ -6,7 +6,7 @@ using UnityEngine.Events;
 
 public class DashBlock : ActionBlock
 {
-    #region
+    #region ½Ì±ÛÅæ
     static DashBlock player;
     public static DashBlock Player => player;
 
@@ -15,6 +15,8 @@ public class DashBlock : ActionBlock
         if (player == null)
         {
             player = this;
+            int i = GetType().Name[0] - 'A';
+            Prefabs[i] = this;
         }
         else
         {
