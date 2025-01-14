@@ -15,8 +15,8 @@ public class DashBlock : ActionBlock
         if (player == null)
         {
             player = this;
-            int i = GetType().Name[0] - 'A';
-            Prefabs[i] = this;
+            Pools[GetType().Name[0] - 'A'].Enqueue(this);
+            GameStart();
         }
         else
         {
@@ -24,6 +24,7 @@ public class DashBlock : ActionBlock
             return;
         }
     }
+
 
     private void OnDestroy()
     {
@@ -34,48 +35,95 @@ public class DashBlock : ActionBlock
     }
     #endregion
 
+    void GameStart()
+    {
+        MapLoader.Initialize().Forget();
+    }
 
+
+
+    bool isGameOVer;
+    public bool IsGameOVer
+    {
+        get
+        {
+            return isGameOVer;
+        }
+        private set
+        {
+            isGameOVer = value;
+
+            GetComponent<SpriteRenderer>().enabled = !isGameOVer;
+            TMP.gameObject.SetActive(!isGameOVer);
+        }
+    }
 
     public override void Init(Vector3 position, int hp)
     {
         transform.position = position;
         HP = 99;
-
-        GetComponent<SpriteRenderer>().enabled = true;
-        TMP.gameObject.SetActive(true);
+        IsGameOVer = false;
+        gameObject.SetActive(true);
     }
 
     public UnityEvent OnStartedGame;
     public UnityEvent OnFailedGame;
 
+    /// <summary>
+    /// 벽돌에 부딪히는 경우
+    /// </summary>
+    public override void Dash(Vector2Int Dir)
+    {
+        //Dir 방향으로 이동하였을 때 이동이 가능한가?
+        if (CheckLine(Dir, out Vector2Int targetPosition, out Block hitBlock))
+        {
+            IsMoving = true;
+
+            transform
+                .DOMove(new Vector3(targetPosition.x, targetPosition.y, 0), .1f)
+                .SetEase(Ease.InQuart)
+                .OnComplete(() =>
+                {
+                    if (hitBlock != null)
+                    {
+                        hitBlock.TakeDamage(this);
+                    }
+
+                    TakeDamage(hitBlock);
+                    CameraController.Shake(0.3f, 0.4f);
+                    IsMoving = false;
+                });
+        }
+        else
+        {
+            OnFailedMove();
+        }
+    }
+
     public override void OnFailedMove()
     {
         IsMoving = true;
-        
+
         // TODO : 이동에 실패했을 때 소리를 재생
         transform
             .DOShakePosition(0.3f, .3f, 20)
             .OnComplete(() =>
             {
-                IsMoving = false;;
+                IsMoving = false; ;
             });
     }
 
 
 
+    public override void TakeDamage(Block hitBlock = null)
+    {
+        CameraController.Shake(0.23f,0.45f);
+        HP--;
+    }
 
     protected override void OnBlockDestroyed()
     {
-        OnFaildGame();
-    }
-
-    void OnFaildGame()
-    {
         CameraController.BreakEffect();
-
-        GetComponent<SpriteRenderer>().enabled = false;
-        TMP.gameObject.SetActive(false);
-
         OnFailedGame.Invoke();
     }
 }

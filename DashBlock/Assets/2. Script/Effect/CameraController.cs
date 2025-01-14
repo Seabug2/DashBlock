@@ -6,8 +6,7 @@ using UnityEngine.Rendering.Universal;
 
 public static class CameraController
 {
-    static Camera main;
-    public static Camera Main => main ??= Camera.main;
+    public static Camera Main => Camera.main;
 
     static ColorAdjustments colorAdjustments;
     static ColorAdjustments ColorAdjustments

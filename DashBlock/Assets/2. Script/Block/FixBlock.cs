@@ -6,7 +6,7 @@ public class FixBlock : Block
 {
     ActionBlock FixedBlock;
 
-    public override bool IsClear(Block hitBlock, ref Vector2Int collisionPosition, int movementDistance)
+    public override bool IsCleared(Block hitBlock, ref Vector2Int collisionPosition, int movementDistance)
     {
         //속이 비었다면 부딪힌 블록은 이 블록의 위치까지 이동한다.
         if (FixedBlock == null)

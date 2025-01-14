@@ -9,17 +9,16 @@ public class EnergyBlock : Block
     /// <param name="collisionDirection">충돌 방향과</param>
     /// <param name="movementDistance">충돌 거리</param>
     /// <returns></returns>
-    public override bool IsClear(Block hitBlock, ref Vector2Int collisionDirection, int movementDistance)
+    public override bool IsCleared(Block hitBlock, ref Vector2Int collisionPosition, int movementDistance)
     {
         //부딪힌 Block이 DashBlock이라면 거리에 상관없이 무조건 사라진다.
-        if(hitBlock is DashBlock _)
+        if (hitBlock is DashBlock _)
         {
-            collisionDirection = Position;
+            collisionPosition = Position;
             return true;
         }
 
-        //아니라면 사라지지 않는다.0
-        return false;
+        return movementDistance > 0;
     }
 
     /// <summary>
@@ -30,7 +29,7 @@ public class EnergyBlock : Block
     {
         if (HitBlock != null && HitBlock is DashBlock dashBlock)
         {
-            dashBlock.HP = 99;
+            dashBlock.HP = 100;
             HP = 0;
         }
     }

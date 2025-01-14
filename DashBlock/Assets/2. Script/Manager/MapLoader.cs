@@ -22,10 +22,11 @@ public static class MapLoader
     const string url = "https://docs.google.com/spreadsheets/d/194NAzYpdn938JB_HMUGmefgy66cs3sOhxcl2iUnOAms/export?format=csv";
 
     static MapData[] SheatDatas;
+
     static MapData currentMap;
     static string titleMapData;
 
-    public async static UniTaskVoid Init()
+    public async static UniTaskVoid Initialize()
     {
         //첫 번째 스프레드 시트를 불러오고,
         string datas = await SheetRequest("0");
@@ -53,9 +54,13 @@ public static class MapLoader
 
 
 
-        LoadMap(titleMapData);
+        LoadTitleMap();
     }
 
+    public static void LoadTitleMap()
+    {
+        LoadMap(titleMapData);
+    }
 
     public async static UniTask<string> SheetRequest(string gid)
     {
@@ -66,71 +71,68 @@ public static class MapLoader
         return mapData;
     }
 
+    /// <summary>
+    /// 화면을 가린 후에, 맵 초기화와 맵 생성
+    /// </summary>
     public static void LoadMap(string mapData, Action OnCompletedLoadMap = null)
     {
-        ActionBlock.ActiveMovingBlocks = 100;
+        DashBlock.Player.IsMoving = true;
+        Block.ResetTileMap();
 
-
-
-
-        if (string.IsNullOrWhiteSpace(mapData))
-        {
-            Debug.LogError("Map data is empty.");
-            return;
-        }
-
-        string[] lines = mapData.Split('\n');
-        int limitY = lines.Length;
+        string[] lines = mapData.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+        int length_Y = lines.Length;
 
         string[] firstLineNumbers = lines[0].Split(',');
-        int limitX = firstLineNumbers.Length;
+        int length_X = firstLineNumbers.Length;
 
-        CameraController.SetPosition(limitX, limitY);
+        CameraController.SetPosition(length_X, length_Y);
 
-        Block.ResetTileMap();
-        Block.limit_x = (limitX - 1);
-        Block.limit_y = (limitY - 1);
+        Block.limit_x = (length_X - 1);
+        Block.limit_y = (length_Y - 1);
 
         Debug.Log($"Map Size {Block.limit_x} / {Block.limit_y}");
 
 
 
 
-        string[] line;
-        for (int y = 0; y < limitY; y++)
+        string[] line; // = , , , , ,로 구분된 행 데이터
+        for (int y = 0; y < length_Y; y++)
         {
             line = lines[y].Split(',');
-            for (int x = 0; x < limitX; x++)
+            for (int x = 0; x < length_X; x++)
             {
+                string cell = line[x];
+
                 //저장된 데이터가 없는 경우
                 if (string.IsNullOrWhiteSpace(line[x]) || line[x].Length != 3)
                 {
                     continue;
                 }
 
-                SetTile(line[x], new Vector2(x, limitY - y - 1));
+                SetTile(cell, new Vector2(x, length_Y - y - 1));
             }
         }
 
-        ActionBlock.ActiveMovingBlocks = 0;
+        DashBlock.Player.IsMoving = false;
+        ActionBlock.MovingBlockCount = 0;
         OnCompletedLoadMap?.Invoke();
     }
 
     private static void SetTile(string tileData, Vector2 position)
     {
-        int blockType = tileData[0] - 'A';
-        string hp = tileData.Substring(1);
+        //"A09"
+        //블록의 종류를 확인
+        Block block = Block.GetBlock(tileData[0]);
 
+        //생성할 블록의 HP를 확인
+        string hp = tileData.Substring(1);
         if (!int.TryParse(hp, out int HP))
         {
             HP = 1;
         }
 
-        int i = blockType - 'A';
-        Block block = Block.GetBlock(i);
-
         //Block의 B
-        if (blockType == 'B')
+        if (tileData[0] == 'B')
         {
             Block.BlockCount++;
         }

@@ -4,13 +4,7 @@ using UnityEngine;
 
 public class ConcreteBlock : Block
 {
-    void Start()
-    {
-        //체력 표시할 필요가 없음
-        TMP.gameObject.SetActive(false);
-    }
-
-    public override bool IsClear(Block hitBlock, ref Vector2Int collisionDirection, int movementDistance)
+    public override bool IsCleared(Block hitBlock, ref Vector2Int collisionDirection, int movementDistance)
     {
         if (movementDistance < 1)
         {

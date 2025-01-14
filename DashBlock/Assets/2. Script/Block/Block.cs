@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 public class Block : MonoBehaviour
 {
@@ -11,7 +12,7 @@ public class Block : MonoBehaviour
     /// </summary>
     protected static Block[] Prefabs;
 
-    [RuntimeInitializeOnLoadMethod]
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void LoadAllBlock()
     {
         //리소스 폴더에 있는 블록 프리팹을 전부 로드하고
@@ -52,6 +53,7 @@ public class Block : MonoBehaviour
         }
 
         Queue<Block> q = Pools[i];
+
         if (q.Count == 0)
         {
             return Instantiate(Prefabs[i]);
@@ -84,8 +86,9 @@ public class Block : MonoBehaviour
     public static int BlockCount = 0;
     public static void ResetTileMap()
     {
+        Block[] values = TileMap.Values.ToArray();
         //TODO : 남아있는 생성 블록을 다시 Pool에 넣는다.
-        foreach (Block b in TileMap.Values)
+        foreach (Block b in values)
         {
             b.Return();
         }
@@ -134,12 +137,12 @@ public class Block : MonoBehaviour
             }
 
             TMP.text = hp.ToString();
-            Punching();
         }
     }
 
     public virtual void TakeDamage(Block HitBlock = null)
     {
+        Punching();
         HP--;
     }
 
@@ -160,7 +163,7 @@ public class Block : MonoBehaviour
     /// hitBlock이 movementDistance만큼 이동하여 CollisionPosition에서 현재 Block과 충돌했을 때,
     /// hitBlock의 이동 유무와 최종 목적지를 반환
     /// </summary>
-    public virtual bool IsClear(Block hitBlock, ref Vector2Int collisionPosition, int movementDistance)
+    public virtual bool IsCleared(Block hitBlock, ref Vector2Int collisionPosition, int movementDistance)
     {
         //충돌거리가 1보다 작으면 이동 못함
         if (movementDistance < 1)
@@ -169,6 +172,7 @@ public class Block : MonoBehaviour
         //HP가 1 이하라면 이 블록의 위치까지 이동한다.
         if (HP == 1)
         {
+            //파괴될 것이라면 자신의 자리를 준다.
             collisionPosition = Position;
             return true;
         }

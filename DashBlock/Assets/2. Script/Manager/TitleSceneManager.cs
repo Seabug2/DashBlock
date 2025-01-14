@@ -2,8 +2,11 @@ using UnityEngine;
 
 public class TitleSceneManager : MonoBehaviour
 {
-    void Start()
+    private void Update()
     {
-        MapLoader.Init().Forget();
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            MapLoader.LoadTitleMap();
+        }
     }
 }
