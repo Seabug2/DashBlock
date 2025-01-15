@@ -429,6 +429,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a364862319d105c49b3da9fde81ced98, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  collisionDamage: 1
   OnStartedGame:
     m_PersistentCalls:
       m_Calls: []

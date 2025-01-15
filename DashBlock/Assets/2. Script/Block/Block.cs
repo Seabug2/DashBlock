@@ -7,9 +7,7 @@ using System.Linq;
 
 public class Block : MonoBehaviour
 {
-    /// <summary>
-    /// 블록 프리팹을 Dictionary로 저장하고 관리
-    /// </summary>
+    #region 블록 관리 / 오브젝트 풀링 사용 / Queue<Block>[] 사용
     protected static Block[] Prefabs;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -30,9 +28,6 @@ public class Block : MonoBehaviour
             Pools[number] = new Queue<Block>();
         }
     }
-
-
-
 
     //사용을 마친 블록을 관리하는 Pooling용 Queue 배열
     protected static Queue<Block>[] Pools;
@@ -77,7 +72,7 @@ public class Block : MonoBehaviour
         TileMap.Remove(Position);
         gameObject.SetActive(false);
     }
-
+    #endregion
 
 
 
@@ -140,10 +135,17 @@ public class Block : MonoBehaviour
         }
     }
 
+    [SerializeField] int collisionDamage = 1;
+    public int CollisionDamage => collisionDamage;
+
     public virtual void TakeDamage(Block HitBlock = null)
     {
-        Punching();
-        HP--;
+        HP -= HitBlock.collisionDamage;
+
+        if (HP > 0)
+        {
+            Punching();
+        }
     }
 
     public virtual void Init(Vector3 position, int hp)
@@ -163,23 +165,14 @@ public class Block : MonoBehaviour
     /// hitBlock이 movementDistance만큼 이동하여 CollisionPosition에서 현재 Block과 충돌했을 때,
     /// hitBlock의 이동 유무와 최종 목적지를 반환
     /// </summary>
-    public virtual bool IsCleared(Block hitBlock, ref Vector2Int collisionPosition, int movementDistance)
+    public virtual bool IsCleared(ActionBlock hitBlock, ref Vector2Int collisionPosition, int movementDistance)
     {
         //충돌거리가 1보다 작으면 이동 못함
         if (movementDistance < 1)
             return false;
 
-        //HP가 1 이하라면 이 블록의 위치까지 이동한다.
-        if (HP == 1)
-        {
-            //파괴될 것이라면 자신의 자리를 준다.
-            collisionPosition = Position;
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        collisionPosition = (HP == 1) ? Position : collisionPosition;
+        return true;
     }
 
 

@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class TitleSceneManager : MonoBehaviour
@@ -6,7 +7,7 @@ public class TitleSceneManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            MapLoader.LoadTitleMap();
+            MapLoader.LoadMap().Forget();
         }
     }
 }

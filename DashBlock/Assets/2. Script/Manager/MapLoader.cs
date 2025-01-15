@@ -22,7 +22,6 @@ public static class MapLoader
     const string url = "https://docs.google.com/spreadsheets/d/194NAzYpdn938JB_HMUGmefgy66cs3sOhxcl2iUnOAms/export?format=csv";
 
     static MapData[] SheatDatas;
-
     static MapData currentMap;
     static string titleMapData;
 
@@ -52,14 +51,7 @@ public static class MapLoader
         }
 
 
-
-
-        LoadTitleMap();
-    }
-
-    public static void LoadTitleMap()
-    {
-        LoadMap(titleMapData);
+        LoadMap().Forget();
     }
 
     public async static UniTask<string> SheetRequest(string gid)
@@ -74,12 +66,33 @@ public static class MapLoader
     /// <summary>
     /// 화면을 가린 후에, 맵 초기화와 맵 생성
     /// </summary>
-    public static void LoadMap(string mapData, Action OnCompletedLoadMap = null)
+    public async static UniTask LoadMap(MapData mapData = null, Action OnCompletedLoadMap = null)
     {
-        DashBlock.Player.IsMoving = true;
+        await UniTask.WaitWhile(() => ActionBlock.IsAnyActionBlockMoving);
+
+        //TODO : 조작을 막고 화면을 가려야함
+        if (Locator.TryGet(out BlockController controller))
+        {
+            controller.SetActive(false);
+        }
+
+        //await 화면 가리기
+
         Block.ResetTileMap();
 
-        string[] lines = mapData.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+
+        string sheet;
+
+        if (mapData == null)
+        {
+            sheet = titleMapData;
+        }
+        else
+        {
+            sheet = await SheetRequest(mapData.Gid);
+        }
+
+        string[] lines = sheet.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
         int length_Y = lines.Length;
 
         string[] firstLineNumbers = lines[0].Split(',');
@@ -113,8 +126,6 @@ public static class MapLoader
             }
         }
 
-        DashBlock.Player.IsMoving = false;
-        ActionBlock.MovingBlockCount = 0;
         OnCompletedLoadMap?.Invoke();
     }
 

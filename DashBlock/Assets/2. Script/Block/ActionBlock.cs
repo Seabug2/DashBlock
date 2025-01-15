@@ -5,12 +5,11 @@ using UnityEngine;
 
 public class ActionBlock : Block
 {
-    public static int MovingBlockCount = 0;
+    public static bool IsAnyActionBlockMoving => movingBlockCount > 0;
 
-    /// <summary>
-    /// 움직이고 있는 Action Block이 하나라도 있다면 true를 반환
-    /// </summary>
-    private bool isMoving;
+    static int movingBlockCount = 0;
+
+    bool isMoving;
     public bool IsMoving
     {
         get
@@ -20,39 +19,33 @@ public class ActionBlock : Block
         set
         {
             isMoving = value;
-            MovingBlockCount += value ? 1 : -1;
-
-            if (MovingBlockCount < 0)
-            {
-                MovingBlockCount = 0;
-            }
+            movingBlockCount = Mathf.Max(0, movingBlockCount + (value ? 1 : -1));
         }
     }
+
+    public Action OnMoveBegin;
 
     /// <summary>
     /// 벽돌에 부딪히는 경우
     /// </summary>
     public virtual void Dash(Vector2Int Dir)
     {
-        //Dir 방향으로 이동하였을 때 이동이 가능한가?
         if (CheckLine(Dir, out Vector2Int targetPosition, out Block hitBlock))
         {
-            // Dir 방향으로 이동하면 targetPosition 위치까지 이동할 것이고
-            // hitBlock에 부딪힐 것
-
-            //자신이 가진 키값이 타일맵에 존재하며
-            //그 저장된 값이 자신이라면 타일맵에서 제거
             if (TileMap.TryGetValue(Position, out Block block)
                 && block == this)
             {
                 TileMap.Remove(Position);
             }
 
-            IsMoving = true;
+            IsMoving=true;
+
+            OnMoveBegin?.Invoke();
+            OnMoveBegin = null;
 
             transform
-                .DOMove(new Vector3(targetPosition.x, targetPosition.y, 0), .1f)
-                .SetEase(Ease.InQuart)
+                .DOMove(new Vector3(targetPosition.x, targetPosition.y, 0), .2f)
+                //.SetEase(Ease.InQuart)
                 .OnComplete(() =>
                 {
                     if (hitBlock != null)
@@ -61,12 +54,10 @@ public class ActionBlock : Block
                     }
 
                     TakeDamage(hitBlock);
-                    IsMoving = false;
 
-                    //이동을 마치고,
-                    //현재 위치의 타일맵에 아무 블록도 존재하지 않으면
-                    //자신을 등록
                     TileMap.TryAdd(Position, this);
+                    IsMoving = false;
+                    CameraController.Shake(0.3f, 0.4f);
                 });
         }
         else
@@ -75,11 +66,11 @@ public class ActionBlock : Block
         }
     }
 
-    public Vector2Int lastDir { get; private set; }
+    public Vector2Int LastDir { get; private set; }
 
     public bool CheckLine(Vector2Int Dir, out Vector2Int targetPosition, out Block hitBlock)
     {
-        lastDir = Dir;
+        LastDir = Dir;
 
         targetPosition = Position;
         hitBlock = null;
@@ -126,22 +117,9 @@ public class ActionBlock : Block
             return hitBlock.IsCleared(this, ref targetPosition, movementDistance);
         }
     }
-
-    public override bool IsCleared(Block hitBlock, ref Vector2Int collisionPopsition, int movementDistance)
+    public override bool IsCleared(ActionBlock hitBlock, ref Vector2Int collisionPopsition, int movementDistance)
     {
-        //부딪힌 거리가 1 아래면 밀리지 않는다.
-        if (movementDistance < 1)
-            return false;
-
-        Vector2Int dir = Position - collisionPopsition;
-
-        //부딪힌 거리가 1 이상일 때,
-        bool isCleared = CheckLine(dir, out Vector2Int _, out Block _);
-        if (isCleared)
-        {
-            collisionPopsition = Position;
-        }
-        return true;
+        return movementDistance > 0;
     }
 
     public virtual void OnFailedMove()
@@ -152,11 +130,20 @@ public class ActionBlock : Block
     public override void TakeDamage(Block hitBlock = null)
     {
         //멈춰있는 중에 데미지를 받았다는 것은 다른 움직이는 물체에 부딪혀서 밀려야 한다는 의미
-        if (!IsMoving)
+        if (IsMoving)
+        {
+            int damage = (hitBlock == null) ? 1 : hitBlock.CollisionDamage;
+
+            if (damage > 0)
+            {
+                CameraController.Shake(0.34f, 0.56f);
+            }
+        }
+        else
         {
             if (hitBlock is ActionBlock actionBlock)
             {
-                Dash(actionBlock.lastDir);
+                Dash(actionBlock.LastDir);
             }
         }
     }

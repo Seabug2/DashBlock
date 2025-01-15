@@ -4,12 +4,10 @@ using UnityEngine;
 
 public class GameOverBlock : Block
 {
-    public override bool IsCleared(Block hitBlock, ref Vector2Int collisionPosition, int movementDistance)
+    public override bool IsCleared(ActionBlock hitBlock, ref Vector2Int collisionPosition, int movementDistance)
     {
         if (hitBlock is DashBlock _)
         {
-            //부딪힐 블록이 플레이어의 블록이면 거리에 상관없이 
-            collisionPosition = Position;
             return true;
         }
 
@@ -22,6 +20,7 @@ public class GameOverBlock : Block
         {
             //부딪힐 블록이 플레이어의 블록이면 거리에 상관없이 
             player.HP = 1;
+            return;
         }
 
         Punching();

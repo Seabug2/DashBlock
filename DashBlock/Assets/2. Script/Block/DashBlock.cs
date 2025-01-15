@@ -16,7 +16,8 @@ public class DashBlock : ActionBlock
         {
             player = this;
             Pools[GetType().Name[0] - 'A'].Enqueue(this);
-            GameStart();
+
+            MapLoader.Initialize().Forget();
         }
         else
         {
@@ -35,10 +36,6 @@ public class DashBlock : ActionBlock
     }
     #endregion
 
-    void GameStart()
-    {
-        MapLoader.Initialize().Forget();
-    }
 
 
 
@@ -60,6 +57,7 @@ public class DashBlock : ActionBlock
 
     public override void Init(Vector3 position, int hp)
     {
+        Pools[GetType().Name[0] - 'A'].Enqueue(this);
         transform.position = position;
         HP = 99;
         IsGameOVer = false;
@@ -79,9 +77,12 @@ public class DashBlock : ActionBlock
         {
             IsMoving = true;
 
+            OnMoveBegin?.Invoke();
+            OnMoveBegin = null;
+
             transform
                 .DOMove(new Vector3(targetPosition.x, targetPosition.y, 0), .1f)
-                .SetEase(Ease.InQuart)
+                //.SetEase(Ease.InQuart)
                 .OnComplete(() =>
                 {
                     if (hitBlock != null)
@@ -90,7 +91,6 @@ public class DashBlock : ActionBlock
                     }
 
                     TakeDamage(hitBlock);
-                    CameraController.Shake(0.3f, 0.4f);
                     IsMoving = false;
                 });
         }
@@ -109,21 +109,36 @@ public class DashBlock : ActionBlock
             .DOShakePosition(0.3f, .3f, 20)
             .OnComplete(() =>
             {
-                IsMoving = false; ;
+                IsMoving = false;
             });
     }
 
-
-
     public override void TakeDamage(Block hitBlock = null)
     {
-        CameraController.Shake(0.23f,0.45f);
-        HP--;
+        int damage = (hitBlock == null) ? 1 : hitBlock.CollisionDamage;
+
+        if (damage > 0)
+        {
+            CameraController.Shake(0.34f, 0.56f);
+        }
+
+        HP -= damage;
     }
 
     protected override void OnBlockDestroyed()
     {
         CameraController.BreakEffect();
+        IsGameOVer = true;
         OnFailedGame.Invoke();
+    }
+
+    public override bool IsCleared(ActionBlock hitBlock, ref Vector2Int collisionPosition, int movementDistance)
+    {
+        //충돌거리가 1보다 작으면 이동 못함
+        if (movementDistance < 1)
+            return false;
+
+        collisionPosition = (HP == 1) ? Position : collisionPosition;
+        return true;
     }
 }

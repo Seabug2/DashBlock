@@ -3,9 +3,14 @@ using UnityEngine.InputSystem;
 
 public class BlockController : Singleton
 {
+    public void SetActive(bool isActive)
+    {
+        gameObject.SetActive(isActive);
+    }
+
     void Update()
     {
-        if (DashBlock.Player.IsMoving) return;
+        if (ActionBlock.IsAnyActionBlockMoving) return;
 
         if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
         {

@@ -2,14 +2,7 @@ using UnityEngine;
 
 public class EnergyBlock : Block
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="hitBlock">부딪힌 Block의 </param>
-    /// <param name="collisionDirection">충돌 방향과</param>
-    /// <param name="movementDistance">충돌 거리</param>
-    /// <returns></returns>
-    public override bool IsCleared(Block hitBlock, ref Vector2Int collisionPosition, int movementDistance)
+    public override bool IsCleared(ActionBlock hitBlock, ref Vector2Int collisionPosition, int movementDistance)
     {
         //부딪힌 Block이 DashBlock이라면 거리에 상관없이 무조건 사라진다.
         if (hitBlock is DashBlock _)
@@ -27,9 +20,9 @@ public class EnergyBlock : Block
     /// <param name="HitBlock"></param>
     public override void TakeDamage(Block HitBlock = null)
     {
-        if (HitBlock != null && HitBlock is DashBlock dashBlock)
+        if (HitBlock is DashBlock dashBlock)
         {
-            dashBlock.HP = 100;
+            dashBlock.HP = 99;
             HP = 0;
         }
     }
