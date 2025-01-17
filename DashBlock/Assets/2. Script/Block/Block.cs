@@ -1,84 +1,121 @@
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
-using System;
-using System.Collections;
 using System.Collections.Generic;
-public struct BlockPosition
-{
-    public sbyte x, y;
-    public BlockPosition(sbyte x, sbyte y)
-    {
-        this.x = x;
-        this.y = y;
-    }
-
-    public BlockPosition(Vector2 position)
-    {
-        x = (sbyte)Mathf.RoundToInt(position.x);
-        y = (sbyte)Mathf.RoundToInt(position.y);
-    }
-
-    public BlockPosition(Vector3 position)
-    {
-        x = (sbyte)Mathf.RoundToInt(position.x);
-        y = (sbyte)Mathf.RoundToInt(position.y);
-    }
-
-    public static BlockPosition operator +(BlockPosition a, BlockPosition b)
-    {
-        return new BlockPosition((sbyte)(a.x + b.x), (sbyte)(a.y + b.y));
-    }
-
-    public static BlockPosition operator -(BlockPosition a, BlockPosition b)
-    {
-        return new BlockPosition((sbyte)(a.x - b.x), (sbyte)(a.y - b.y));
-    }
-
-    // Equals 재정의 (값 비교)
-    public override bool Equals(object obj)
-    {
-        if (obj is BlockPosition other)
-        {
-            return this.x == other.x && this.y == other.y;
-        }
-        return false;
-    }
-
-    // GetHashCode 재정의 (해시 코드 생성)
-    public override int GetHashCode()
-    {
-        return (x, y).GetHashCode();
-    }
-
-    // ToString 재정의 (디버깅 편의)
-    public override string ToString()
-    {
-        return $"({x}, {y})";
-    }
-
-    // BlockPosition -> Vector2 (암묵적 변환)
-    public static implicit operator Vector2(BlockPosition pos)
-    {
-        return new Vector2(pos.x, pos.y);
-    }
-
-    // BlockPosition -> Vector2 (암묵적 변환)
-    public static implicit operator Vector3(BlockPosition pos)
-    {
-        return new Vector3(pos.x, pos.y, 0);
-    }
-}
+using System;
+using System.Linq;
 
 public class Block : MonoBehaviour
 {
+    #region 블록 관리 / 오브젝트 풀링 사용 / Queue<Block>[] 사용
+    protected static Block[] Prefabs;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    static void LoadAllBlock()
+    {
+        //리소스 폴더에 있는 블록 프리팹을 전부 로드하고
+        //프리팹 파일 이름 첫 글자의 ASCII 번호를 따서 인덱스로 사용하여 배열에 저장
+        Block[] resources = Resources.LoadAll<Block>("Blocks");
+        int size = resources.Length;
+        Prefabs = new Block[size];
+        Pools = new Queue<Block>[size];
+
+        foreach (Block b in resources)
+        {
+            string name = b.name;
+            int number = name[0] - 'A';
+            Prefabs[number] = b;
+            Pools[number] = new Queue<Block>();
+        }
+    }
+
+    //사용을 마친 블록을 관리하는 Pooling용 Queue 배열
+    protected static Queue<Block>[] Pools;
+
+    //가져오기
+    public static Block GetBlock(char c)
+    {
+        int i = c - 'A';
+        return GetBlock(i);
+    }
+
+    public static Block GetBlock(int i)
+    {
+        if (i < 0 || i >= Pools.Length)
+        {
+            i = 0;
+            Debug.LogError("인덱싱 오류");
+        }
+
+        Queue<Block> q = Pools[i];
+
+        if (q.Count == 0)
+        {
+            return Instantiate(Prefabs[i]);
+        }
+
+        return q.Dequeue();
+    }
+
+    public static Block GetBlock<T>()
+    {
+        Type type = typeof(T);
+        int i = type.Name[0];
+
+        return GetBlock(i);
+    }
+
+    //집어넣기
+    protected void Return()
+    {
+        Pools[GetType().Name[0] - 'A'].Enqueue(this);
+        TileMap.Remove(Position);
+        gameObject.SetActive(false);
+    }
+    #endregion
+
+
+
+    //생성된 블록을 타일맵으로 관리하는 Dictionary
+    public static readonly Dictionary<Vector2Int, Block> TileMap = new();
+    public static int BlockCount = 0;
+    public static void ResetTileMap()
+    {
+        Block[] values = TileMap.Values.ToArray();
+        //TODO : 남아있는 생성 블록을 다시 Pool에 넣는다.
+        foreach (Block b in values)
+        {
+            b.Return();
+        }
+
+        TileMap.Clear();
+        BlockCount = 0;
+    }
+
+    public static int limit_x;
+    public static int limit_y;
+
+
+
+
     TextMeshPro tmp;
     protected TextMeshPro TMP => tmp ??= GetComponentInChildren<TextMeshPro>(true);
 
-    public BlockPosition Position => new (transform.position);
+    public Vector2Int Position
+    {
+        get
+        {
+            int x = Mathf.RoundToInt(transform.position.x);
+            int y = Mathf.RoundToInt(transform.position.y);
+            return new(x, y);
+        }
+    }
 
-    sbyte hp;
-    public sbyte HP
+    int hp;
+    /// <summary>
+    /// 데미지를 받아 hp가 0이 되면 객체는 파괴된다.
+    /// </summary>
+    public int HP
     {
         get
         {
@@ -95,54 +132,85 @@ public class Block : MonoBehaviour
             }
 
             TMP.text = hp.ToString();
+        }
+    }
+
+    [SerializeField] int collisionDamage = 1;
+    public int CollisionDamage => collisionDamage;
+
+    public virtual void TakeDamage(Block HitBlock = null)
+    {
+        HP -= HitBlock.collisionDamage;
+
+        if (HP > 0)
+        {
             Punching();
         }
     }
 
-    /// <summary>
-    /// 블록의 현재 HP가 받을 데미지 이하라면 파괴될 것
-    /// </summary>
-    public virtual bool CanBeDestroyed(sbyte damage = 1)
-    {
-        return HP <= damage;
-    }
-
-    public virtual void TakeDamage(sbyte damage = 1, Block HitBlock = null)
-    {
-        HP -= damage;
-    }
-
-
-
-    public virtual void Init(Vector3 position, sbyte hp)
+    public virtual void Init(Vector3 position, int hp)
     {
         transform.position = position;
         HP = hp;
         gameObject.SetActive(true);
 
-        if (!BlockManager.Tiles.TryAdd(Position, this))
+        if (!TileMap.TryAdd(Position, this))
         {
-            BlockManager.Enqueue(GetType(), this);
+            Return();
             return;
         }
     }
 
+    /// <summary>
+    /// hitBlock이 movementDistance만큼 이동하여 CollisionPosition에서 현재 Block과 충돌했을 때,
+    /// hitBlock의 이동 유무와 최종 목적지를 반환
+    /// </summary>
+    public virtual bool IsCleared(ActionBlock hitBlock, ref Vector2Int collisionPosition, int movementDistance)
+    {
+        //충돌거리가 1보다 작으면 이동 못함
+        if (movementDistance < 1)
+            return false;
+
+        collisionPosition = (HP == 1) ? Position : collisionPosition;
+        return true;
+    }
 
 
     protected virtual void OnBlockDestroyed()
     {
-        //모든 블록은 파괴될 때 화면의 색을 바꾼다.
-        //ShockWave를 등록해야할 듯
         CameraController.BreakEffect();
-
-        BlockManager.RemainCount--;
-        //pull에 자신을 되돌리는 코드
-        BlockManager.Enqueue(GetType(), this);
+        BlockCount--;
+        Return();
     }
+
+
+
 
     public void Punching()
     {
         transform.DOKill();
+        transform.localScale = Vector3.one;
         transform.DOPunchScale(Vector3.one, .3f, 20).OnComplete(() => transform.localScale = Vector3.one);
+    }
+
+    public static int DashDistance(Vector2Int distance)
+    {
+        return Mathf.RoundToInt(distance.magnitude);
+    }
+
+    public static Vector2Int GetDir(Block targetBlock, Block movingBlock)
+    {
+        Vector3 dir = targetBlock.transform.position - movingBlock.transform.position;
+
+        if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
+        {
+            int x = dir.x > 0 ? 1 : -1;
+            return new Vector2Int(x, 0);
+        }
+        else
+        {
+            int y = dir.y > 0 ? 1 : -1;
+            return new Vector2Int(0, y);
+        }
     }
 }

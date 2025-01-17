@@ -4,13 +4,12 @@ using UnityEngine;
 
 public class ConcreteBlock : Block
 {
-    void Start()
+    public override bool IsCleared(ActionBlock hitBlock, ref Vector2Int collisionDirection, int movementDistance)
     {
-        //체력 표시할 필요가 없음
-        TMP.gameObject.SetActive(false);
+        return movementDistance > 0;
     }
 
-    public override void TakeDamage(sbyte damage = 1, Block HitBlock = null)
+    public override void TakeDamage(Block HitBlock = null)
     {
         Punching();
     }
