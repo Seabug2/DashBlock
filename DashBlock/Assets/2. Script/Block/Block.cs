@@ -57,18 +57,12 @@ public class Block : MonoBehaviour
         return q.Dequeue();
     }
 
-    public static Block GetBlock<T>()
-    {
-        Type type = typeof(T);
-        int i = type.Name[0];
-
-        return GetBlock(i);
-    }
-
     //집어넣기
     protected void Return()
     {
-        Pools[GetType().Name[0] - 'A'].Enqueue(this);
+        //이름의 규칙을 지킬 것
+        Pools[name[0] - 'A'].Enqueue(this);
+
         TileMap.Remove(Position);
         gameObject.SetActive(false);
     }
@@ -76,27 +70,45 @@ public class Block : MonoBehaviour
 
 
 
+    #region 타일맵
     //생성된 블록을 타일맵으로 관리하는 Dictionary
     public static readonly Dictionary<Vector2Int, Block> TileMap = new();
     public static int BlockCount = 0;
     public static void ResetTileMap()
     {
-        Block[] values = TileMap.Values.ToArray();
-        //TODO : 남아있는 생성 블록을 다시 Pool에 넣는다.
-        foreach (Block b in values)
+        if (TileMap.Values.Count > 0)
         {
-            b.Return();
-        }
+            Block[] values = TileMap.Values.ToArray();
 
-        TileMap.Clear();
+            foreach (Block b in values)
+            {
+                b.Return();
+            }
+
+            TileMap.Clear();
+        }
         BlockCount = 0;
     }
 
     public static int limit_x;
     public static int limit_y;
+    #endregion
 
 
 
+
+    public virtual void Init(Vector3 position, int hp)
+    {
+        transform.position = position;
+        HP = hp;
+        gameObject.SetActive(true);
+
+        if (!TileMap.TryAdd(Position, this))
+        {
+            Return();
+            return;
+        }
+    }
 
     TextMeshPro tmp;
     protected TextMeshPro TMP => tmp ??= GetComponentInChildren<TextMeshPro>(true);
@@ -148,30 +160,14 @@ public class Block : MonoBehaviour
         }
     }
 
-    public virtual void Init(Vector3 position, int hp)
-    {
-        transform.position = position;
-        HP = hp;
-        gameObject.SetActive(true);
 
-        if (!TileMap.TryAdd(Position, this))
-        {
-            Return();
-            return;
-        }
-    }
-
-    /// <summary>
-    /// hitBlock이 movementDistance만큼 이동하여 CollisionPosition에서 현재 Block과 충돌했을 때,
-    /// hitBlock의 이동 유무와 최종 목적지를 반환
-    /// </summary>
-    public virtual bool IsCleared(ActionBlock hitBlock, ref Vector2Int collisionPosition, int movementDistance)
+    public virtual bool CanMove(ActionBlock hitBlock, ref Vector2Int collisionPosition, int movementDistance)
     {
         //충돌거리가 1보다 작으면 이동 못함
         if (movementDistance < 1)
             return false;
 
-        collisionPosition = (HP == 1) ? Position : collisionPosition;
+        collisionPosition = (HP <= hitBlock.CollisionDamage) ? Position : collisionPosition;
         return true;
     }
 

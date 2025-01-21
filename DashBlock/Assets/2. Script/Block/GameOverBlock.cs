@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GameOverBlock : Block
 {
-    public override bool IsCleared(ActionBlock hitBlock, ref Vector2Int collisionPosition, int movementDistance)
+    public override bool CanMove(ActionBlock hitBlock, ref Vector2Int collisionPosition, int movementDistance)
     {
         if (hitBlock is DashBlock _)
         {

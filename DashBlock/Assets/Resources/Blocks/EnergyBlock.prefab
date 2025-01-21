@@ -282,4 +282,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 87225b3cdbd96df448db09390085b4c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  myQueueNumber: 0
+  collisionDamage: 0

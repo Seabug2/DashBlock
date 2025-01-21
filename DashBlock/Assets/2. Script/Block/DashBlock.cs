@@ -132,7 +132,7 @@ public class DashBlock : ActionBlock
         OnFailedGame.Invoke();
     }
 
-    public override bool IsCleared(ActionBlock hitBlock, ref Vector2Int collisionPosition, int movementDistance)
+    public override bool CanMove(ActionBlock hitBlock, ref Vector2Int collisionPosition, int movementDistance)
     {
         //충돌거리가 1보다 작으면 이동 못함
         if (movementDistance < 1)

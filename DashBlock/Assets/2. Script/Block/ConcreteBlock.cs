@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ConcreteBlock : Block
 {
-    public override bool IsCleared(ActionBlock hitBlock, ref Vector2Int collisionDirection, int movementDistance)
+    public override bool CanMove(ActionBlock hitBlock, ref Vector2Int collisionDirection, int movementDistance)
     {
         return movementDistance > 0;
     }
