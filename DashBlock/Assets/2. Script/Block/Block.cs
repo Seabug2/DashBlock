@@ -97,22 +97,7 @@ public class Block : MonoBehaviour
 
 
 
-    public virtual void Init(Vector3 position, int hp)
-    {
-        transform.position = position;
-        HP = hp;
-        gameObject.SetActive(true);
-
-        if (!TileMap.TryAdd(Position, this))
-        {
-            Return();
-            return;
-        }
-    }
-
     TextMeshPro tmp;
-    protected TextMeshPro TMP => tmp ??= GetComponentInChildren<TextMeshPro>(true);
-
     public Vector2Int Position
     {
         get
@@ -124,9 +109,7 @@ public class Block : MonoBehaviour
     }
 
     int hp;
-    /// <summary>
-    /// 데미지를 받아 hp가 0이 되면 객체는 파괴된다.
-    /// </summary>
+
     public int HP
     {
         get
@@ -147,12 +130,50 @@ public class Block : MonoBehaviour
         }
     }
 
-    [SerializeField] int collisionDamage = 1;
-    public int CollisionDamage => collisionDamage;
+    /// <summary>
+    /// 부딪힌 상대방 블록에게 줄 데미지
+    /// </summary>
+    [SerializeField] int damage = 1;
+    public int Damage => damage;
+
+    protected TextMeshPro TMP => tmp ??= GetComponentInChildren<TextMeshPro>(true);
+
+
+
+
+    public virtual void Init(Vector3 position, int hp)
+    {
+        transform.position = position;
+
+        if (TileMap.TryAdd(Position, this))
+        {
+            HP = hp > 0 ? hp : 1;
+            gameObject.SetActive(true);
+        }
+        else
+        {
+            Return();
+        }
+    }
+
+    /// <summary>
+    /// 블록이 특정 거리를 이동하여 어떤 위치에서 부딪혔을 때 그 블록이 이동할 수 있는지, 가능하다면 어느 위치까지 이동할 수 있는지를 반환
+    /// </summary>
+    /// <param name="hitBlock">부딪히려는 상대방 블록</param>
+    /// <param name="collisionPosition">충돌을 계산할 위치</param>
+    /// <param name="movementDistance">부딪히려는 블록이 이동한 거리</param>
+    public virtual bool TryCollision(ActionBlock hitBlock, ref Vector2Int collisionPosition, int movementDistance)
+    {
+        if (movementDistance < 1)
+            return false;
+
+        collisionPosition = (HP <= hitBlock.Damage) ? Position : collisionPosition;
+        return true;
+    }
 
     public virtual void TakeDamage(Block HitBlock = null)
     {
-        HP -= HitBlock.collisionDamage;
+        HP -= HitBlock.damage;
 
         if (HP > 0)
         {
@@ -160,21 +181,10 @@ public class Block : MonoBehaviour
         }
     }
 
-
-    public virtual bool CanMove(ActionBlock hitBlock, ref Vector2Int collisionPosition, int movementDistance)
-    {
-        //충돌거리가 1보다 작으면 이동 못함
-        if (movementDistance < 1)
-            return false;
-
-        collisionPosition = (HP <= hitBlock.CollisionDamage) ? Position : collisionPosition;
-        return true;
-    }
-
-
+    public static Action<Block> OnDestroyed;
     protected virtual void OnBlockDestroyed()
     {
-        CameraController.BreakEffect();
+        OnDestroyed?.Invoke(this);
         BlockCount--;
         Return();
     }
@@ -187,26 +197,5 @@ public class Block : MonoBehaviour
         transform.DOKill();
         transform.localScale = Vector3.one;
         transform.DOPunchScale(Vector3.one, .3f, 20).OnComplete(() => transform.localScale = Vector3.one);
-    }
-
-    public static int DashDistance(Vector2Int distance)
-    {
-        return Mathf.RoundToInt(distance.magnitude);
-    }
-
-    public static Vector2Int GetDir(Block targetBlock, Block movingBlock)
-    {
-        Vector3 dir = targetBlock.transform.position - movingBlock.transform.position;
-
-        if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
-        {
-            int x = dir.x > 0 ? 1 : -1;
-            return new Vector2Int(x, 0);
-        }
-        else
-        {
-            int y = dir.y > 0 ? 1 : -1;
-            return new Vector2Int(0, y);
-        }
     }
 }

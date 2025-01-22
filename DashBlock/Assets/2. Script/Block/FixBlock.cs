@@ -1,12 +1,14 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class FixBlock : Block
 {
+    public static Action<Block> OnHit;
     ActionBlock FixedBlock;
 
-    public override bool CanMove(ActionBlock hitBlock, ref Vector2Int collisionPosition, int movementDistance)
+    public override bool TryCollision(ActionBlock hitBlock, ref Vector2Int collisionPosition, int movementDistance)
     {
         if (FixedBlock == null)
         {
@@ -29,7 +31,6 @@ public class FixBlock : Block
 
     public override void TakeDamage(Block HitBlock = null)
     {
-        //∫Œµ˙»˘ ∫Ì∑œ¿Ã ActionBlock¿Ã∏È,
         if (HitBlock != null && HitBlock is ActionBlock actionBlock)
         {
             if (FixedBlock != null)
@@ -43,11 +44,13 @@ public class FixBlock : Block
             }
         }
 
+        OnHit?.Invoke(this);
         Punching();
     }
 
-    void Release()
+    void Release(ActionBlock releasedBlock)
     {
+        releasedBlock.OnMoveBegin -= Release;
         FixedBlock = null;
     }
 }

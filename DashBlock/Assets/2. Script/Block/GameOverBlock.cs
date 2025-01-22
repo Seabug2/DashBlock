@@ -1,10 +1,12 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class GameOverBlock : Block
 {
-    public override bool CanMove(ActionBlock hitBlock, ref Vector2Int collisionPosition, int movementDistance)
+    public static Action<Block> OnHit;
+    public override bool TryCollision(ActionBlock hitBlock, ref Vector2Int collisionPosition, int movementDistance)
     {
         if (hitBlock is DashBlock _)
         {
@@ -20,6 +22,7 @@ public class GameOverBlock : Block
         {
             //부딪힐 블록이 플레이어의 블록이면 거리에 상관없이 
             player.HP = 1;
+            OnHit?.Invoke(this);
             return;
         }
 

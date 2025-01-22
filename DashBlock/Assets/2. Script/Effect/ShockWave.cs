@@ -19,12 +19,13 @@ public class ShockWave : Singleton
     protected override void Awake()
     {
         base.Awake();
+        Block.OnDestroyed += CallShockWave;
         gameObject.SetActive(false);
     }
 
-    public void CallShockWave(Vector3 position)
+    public void CallShockWave(Block block)
     {
-        transform.position = position;
+        transform.position = block.transform.position;
         gameObject.SetActive(true);
         _coroutine = StartCoroutine(ShockWaveAction(-0.3f, 1.0f));
     }
@@ -49,4 +50,8 @@ public class ShockWave : Singleton
         gameObject.SetActive(false);
     }
 
+    private void OnDestroy()
+    {
+        Block.OnDestroyed -= CallShockWave;
+    }
 }
