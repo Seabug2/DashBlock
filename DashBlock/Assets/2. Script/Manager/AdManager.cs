@@ -1,8 +1,5 @@
 using GoogleMobileAds.Api;
-using GoogleMobileAds.Unity;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class AdManager : MonoBehaviour
@@ -13,7 +10,7 @@ public class AdManager : MonoBehaviour
     
     
     // admob Id (Test)
-    private string _adUnitId = "ca-app-pub-3940256099942544/1033173712";
+    private string _adUnitId = "ca-app-pub-3940256099942544~1033173712";
 
     private InterstitialAd _interstitialAd;
 
@@ -156,6 +153,8 @@ public class AdManager : MonoBehaviour
 
 
     }
+
+    /*
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
@@ -178,5 +177,5 @@ public class AdManager : MonoBehaviour
 
     }
 
-
+    */
 }
