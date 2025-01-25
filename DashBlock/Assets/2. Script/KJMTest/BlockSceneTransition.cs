@@ -1,18 +1,33 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
-public class BlockSceneTransition : MonoBehaviour
+public class BlockSceneTransition : Singleton
 {
-    // Start is called before the first frame update
-    void Start()
+
+    public UnityAction onStageLoad;
+    public UnityAction onStageStart;
+    [SerializeField] private List<UIBlockControl> uiBlocks = new List<UIBlockControl>();
+
+    protected override void Awake()
     {
+        base.Awake();
+    }
+
+
+    private void Update()
+    {
+        if(Input.GetKeyDown(KeyCode.A))
+        {
+            onStageLoad?.Invoke();
+        }
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            onStageStart?.Invoke();
+        }
         
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+
 }
