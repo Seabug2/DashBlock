@@ -11,25 +11,24 @@ public class BlockController : Singleton
     void Update()
     {
         if (ActionBlock.IsAnyActionBlockMoving) return;
-
-        if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
-        {
-            DashBlock.Player.Dash(new Vector2Int(0, 1));
-        }
-        else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            DashBlock.Player.Dash(new Vector2Int(1, 0));
-        }
-        else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            DashBlock.Player.Dash(new Vector2Int(-1, 0));
-        }
-        else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
-        {
-            DashBlock.Player.Dash(new Vector2Int(0, -1));
-        }
-
-#if UNITY_IOS || UNITY_ANDROID
+//#if !UNITY_ANDROID
+//        if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
+//        {
+//            DashBlock.Player.Dash(new Vector2Int(0, 1));
+//        }
+//        else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
+//        {
+//            DashBlock.Player.Dash(new Vector2Int(1, 0));
+//        }
+//        else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
+//        {
+//            DashBlock.Player.Dash(new Vector2Int(-1, 0));
+//        }
+//        else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
+//        {
+//            DashBlock.Player.Dash(new Vector2Int(0, -1));
+//        }
+//#endif
         if (Touchscreen.current == null)
             return;
 
@@ -47,7 +46,6 @@ public class BlockController : Singleton
         {
             OnTouchEnd(primaryTouch.position.ReadValue());
         }
-#endif
     }
 
     private Vector2 touchStartPosition;

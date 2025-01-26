@@ -39,37 +39,68 @@ public class DashBlock : ActionBlock
 
 
 
-    bool isGameOVer;
-    public bool IsGameOVer
+    bool isGameover;
+    public bool IsGameover
     {
         get
         {
-            return isGameOVer;
+            return isGameover;
         }
         private set
         {
-            isGameOVer = value;
+            isGameover = value;
 
-            GetComponent<SpriteRenderer>().enabled = !isGameOVer;
-            TMP.gameObject.SetActive(!isGameOVer);
+            GetComponent<SpriteRenderer>().enabled = !isGameover;
+            TMP.gameObject.SetActive(!isGameover);
+
+            if (!value)
+            {
+                OnFailedGame.Invoke();
+            }
         }
     }
+
+    public UnityEvent OnStartedGame;
+    public UnityEvent OnFailedGame;
 
     public override void Init(Vector3 position, int hp)
     {
         Pools[GetType().Name[0] - 'A'].Enqueue(this);
         transform.position = position;
         HP = 99;
-        IsGameOVer = false;
+        IsGameover = false;
         gameObject.SetActive(true);
     }
 
-    public UnityEvent OnStartedGame;
-    public UnityEvent OnFailedGame;
+    public override bool TryCollision(ActionBlock hitBlock, ref Vector2Int collisionPosition, int movementDistance)
+    {
+        //충돌거리가 1보다 작으면 이동 못함
+        if (movementDistance < 1)
+            return false;
 
-    /// <summary>
-    /// 벽돌에 부딪히는 경우
-    /// </summary>
+        collisionPosition = (HP == hitBlock.Damage) ? Position : collisionPosition;
+        return true;
+    }
+
+    public override void TakeDamage(Block hitBlock = null)
+    {
+        int damage = (hitBlock == null) ? 1 : hitBlock.Damage;
+
+        if (damage > 0 || HP > damage)
+        {
+            OnCollision?.Invoke(this);
+        }
+
+        HP -= damage;
+    }
+
+    protected override void OnBlockDestroyed()
+    {
+        OnDestroyed?.Invoke(this);
+        IsGameover = true;
+    }
+
+    #region 블록의 이동
     public override void Dash(Vector2Int Dir)
     {
         //Dir 방향으로 이동하였을 때 이동이 가능한가?
@@ -77,9 +108,7 @@ public class DashBlock : ActionBlock
         {
             IsMoving = true;
 
-            OnMoveBegin?.Invoke();
-            OnMoveBegin = null;
-
+            OnMoveBegin?.Invoke(this);
             transform
                 .DOMove(new Vector3(targetPosition.x, targetPosition.y, 0), .1f)
                 //.SetEase(Ease.InQuart)
@@ -102,9 +131,9 @@ public class DashBlock : ActionBlock
 
     public override void OnFailedMove()
     {
+        OnFailedMoveAction?.Invoke(this);
         IsMoving = true;
 
-        // TODO : 이동에 실패했을 때 소리를 재생
         transform
             .DOShakePosition(0.3f, .3f, 20)
             .OnComplete(() =>
@@ -112,33 +141,5 @@ public class DashBlock : ActionBlock
                 IsMoving = false;
             });
     }
-
-    public override void TakeDamage(Block hitBlock = null)
-    {
-        int damage = (hitBlock == null) ? 1 : hitBlock.CollisionDamage;
-
-        if (damage > 0)
-        {
-            CameraController.Shake(0.34f, 0.56f);
-        }
-
-        HP -= damage;
-    }
-
-    protected override void OnBlockDestroyed()
-    {
-        CameraController.BreakEffect();
-        IsGameOVer = true;
-        OnFailedGame.Invoke();
-    }
-
-    public override bool IsCleared(ActionBlock hitBlock, ref Vector2Int collisionPosition, int movementDistance)
-    {
-        //충돌거리가 1보다 작으면 이동 못함
-        if (movementDistance < 1)
-            return false;
-
-        collisionPosition = (HP == 1) ? Position : collisionPosition;
-        return true;
-    }
+    #endregion
 }

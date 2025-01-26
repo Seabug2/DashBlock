@@ -137,7 +137,7 @@ public static class MapLoader
 
         //생성할 블록의 HP를 확인
         string hp = tileData.Substring(1);
-        if (!int.TryParse(hp, out int HP))
+        if (!int.TryParse(hp, out int HP) || HP < 1)
         {
             HP = 1;
         }

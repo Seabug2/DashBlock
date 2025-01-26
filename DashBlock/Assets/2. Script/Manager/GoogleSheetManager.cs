@@ -1,13 +1,8 @@
-using Palmmedia.ReportGenerator.Core.Reporting.Builders;
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
-using Cysharp.Threading.Tasks;
 
 public class GoogleSheetManager : MonoBehaviour
 {
+    /*
     public static Dictionary<string, string> mapKeyValuePairs = new Dictionary<string, string>()
     {
         // Key : Map Name, Value : Map gid;
@@ -51,5 +46,5 @@ public class GoogleSheetManager : MonoBehaviour
 
 
 
-
+    */
 }
